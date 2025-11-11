@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Griffin's Barber Shop - Membresía VIP</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--color-primary)',
+                        secondary: 'var(--color-secondary)',
+                        darkbg: 'var(--bg-tint)',
+                        accentglow: 'var(--color-shadow)',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in-up': 'fadeInUp 0.5s ease-out',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <style>
+        /* --- VARIABLES CSS PARA TEMAS --- */
+        :root {
+            /* Default (Cyber Blue) */
+            --color-primary: #22d3ee; /* cyan-400 */
+            --color-secondary: #2563eb; /* blue-600 */
+            --color-shadow: #00e6e6;
+            --bg-tint: #0a0a0a;
+            --bg-gradient-start: #111;
+        }
+
+        /* Clases de Tema */
+        body.theme-red {
+            --color-primary: #ef4444;
+            --color-secondary: #be123c;
+            --color-shadow: #ef4444;
+            --bg-tint: #0a0505;
+            --bg-gradient-start: #1a0505;
+        }
+
+        body.theme-green {
+            --color-primary: #4ade80;
+            --color-secondary: #16a34a;
+            --color-shadow: #22c55e;
+            --bg-tint: #050a05;
+            --bg-gradient-start: #0a110a;
+        }
+
+        /* --- Estilos Base --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-tint);
+            color: #e0e0e0;
+            background-image: linear-gradient(135deg, var(--bg-gradient-start) 25%, transparent 25%),
+                              linear-gradient(225deg, var(--bg-gradient-start) 25%, transparent 25%),
+                              linear-gradient(45deg, var(--bg-gradient-start) 25%, transparent 25%),
+                              linear-gradient(315deg, var(--bg-gradient-start) 25%, var(--bg-tint) 25%);
+            background-size: 10px 10px;
+            transition: background-color 0.5s ease;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-display {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        /* --- Animaciones --- */
+        @keyframes neon-flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                text-shadow: 0 0 5px var(--color-shadow), 0 0 10px var(--color-shadow), 0 0 20px var(--color-shadow), 0 0 40px var(--color-shadow);
+                color: #fff;
+            }
+            20%, 24%, 55% { text-shadow: none; color: var(--color-primary); }
+        }
+        .logo-animated { animation: neon-flicker 5s infinite alternate-reverse; }
+
+        /* --- Componentes --- */
+        .card-style {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 25px rgba(var(--color-shadow), 0.2), 0 0 50px var(--color-shadow);
+            transition: box-shadow 0.5s ease, border-color 0.5s ease;
+        }
+        /* Ajustes de tema para tarjetas */
+        body.theme-red .card-style { background: linear-gradient(135deg, #2a1a1a 0%, #1a0a0a 100%); border-color: rgba(239, 68, 68, 0.3); }
+        body.theme-green .card-style { background: linear-gradient(135deg, #1a2a1a 0%, #0f1f0f 100%); border-color: rgba(34, 197, 94, 0.3); }
+
+        .input-style {
+            background-color: #1a1a1a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+        }
+        .input-style:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 10px var(--color-shadow);
+        }
+        
+        .select-style {
+            appearance: none;
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+
+        /* --- Efectos 3D --- */
+        .card-container { perspective: 1000px; }
+        .loyalty-card { transition: transform 0.1s ease-out; transform-style: preserve-3d; }
+        .card-logo { transform: translateZ(50px); }
+        .card-grid { transform: translateZ(30px); }
+        .card-footer { transform: translateZ(20px); }
+
+        /* --- Sellos --- */
+        .stamp { border: 2px solid #444; transition: all 0.4s ease; }
+        .stamp.stamped {
+            border-color: var(--color-primary);
+            background-color: var(--color-primary); /* Fallback */
+            background-color: color-mix(in srgb, var(--color-primary), transparent 80%);
+            box-shadow: 0 0 10px var(--color-shadow);
+            animation: stamp-animation 0.5s ease-out;
+        }
+        @keyframes stamp-animation {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        
+        /* --- Barra de Progreso --- */
+        .progress-bar-inner {
+            background: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+            transition: width 0.5s ease-in-out, background 0.5s ease;
+            box-shadow: 0 0 10px var(--color-shadow);
+        }
+
+        /* --- Niveles --- */
+        .level-bronze { color: #a5734b; text-shadow: 0 0 5px #a5734b; }
+        .level-silver { color: #c0c0c0; text-shadow: 0 0 5px #c0c0c0; }
+        .level-gold { color: #ffd700; text-shadow: 0 0 5px #ffd700; }
+        .level-platinum { color: #e5e4e2; text-shadow: 0 0 5px #e5e4e2; }
+
+        .icon-glow { animation: icon-glow-animation 2.5s infinite ease-in-out; }
+        @keyframes icon-glow-animation {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px currentColor); }
+            50% { transform: scale(1.15); filter: drop-shadow(0 0 15px currentColor); }
+        }
+
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
+        .accordion-header.active + .accordion-content { max-height: 500px; }
+        .accordion-header.active .accordion-icon { transform: rotate(180deg); }
+
+        .logo-glow { filter: drop-shadow(0 0 8px var(--color-shadow)); transition: filter 0.5s ease; }
+        .angled-footer { clip-path: polygon(0 10%, 100% 0, 100% 100%, 0% 100%); }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+
+        .theme-option { transition: transform 0.2s, border-color 0.2s; cursor: pointer; }
+        .theme-option:hover { transform: scale(1.05); }
+        .theme-option.active { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+
+        /* Toast Notification */
+        #toast-notification {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px) translateX(-50%);
+        }
+        #toast-notification.show {
+            opacity: 1;
+            transform: translateY(0) translateX(-50%);
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-notification" class="fixed bottom-24 left-1/2 z-[100] bg-gray-900 border border-primary text-white px-6 py-3 rounded-full shadow-[0_0_20px_var(--color-shadow)] flex items-center gap-3">
+        <i class="fas fa-check-circle text-primary text-xl"></i>
+        <span class="font-display text-sm md:text-base">¡Guardado correctamente!</span>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center p-4 md:p-6">
+        <div class="mb-8 text-center flex flex-col items-center">
+            <img src="https://i.postimg.cc/nr2MfJ35/1762826387722.png" alt="Griffin's Logo" class="w-40 md:w-64 logo-glow animate-pulse mb-4">
+            <h1 class="text-4xl md:text-7xl font-display font-bold logo-animated">GRIFFIN'S</h1>
+        </div>
+
+        <div class="card-style w-full max-w-md rounded-2xl p-6 md:p-8 shadow-2xl">
+            <h2 class="font-display text-2xl md:text-3xl text-center text-primary mb-2">MEMBRESÍA VIP</h2>
+            <h3 class="font-display text-lg md:text-xl text-center text-white mb-6">Iniciar Sesión</h3>
+
+            <form id="login-form">
+                <div class="mb-5">
+                    <label for="username" class="block mb-2 text-sm font-display text-gray-300">Usuario</label>
+                    <input type="text" id="username" class="input-style w-full p-3 rounded-lg font-display text-base md:text-lg" required>
+                </div>
+                <div class="mb-5">
+                    <label for="password" class="block mb-2 text-sm font-display text-gray-300">Contraseña</label>
+                    <input type="password" id="password" class="input-style w-full p-3 rounded-lg font-display text-base md:text-lg" required>
+                </div>
+                <p id="login-error" class="text-red-500 text-center mb-4 hidden text-sm">Usuario o contraseña incorrectos.</p>
+                <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 md:px-8 md:py-4 rounded-lg font-bold text-lg shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-105">
+                    Entrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ONBOARDING MODAL -->
+    <div id="onboarding-modal" class="hidden fixed inset-0 z-50 bg-black flex items-center justify-center p-4">
+        <div class="card-style w-full max-w-2xl rounded-2xl p-6 md:p-12 shadow-2xl relative animate-fade-in overflow-y-auto max-h-[90vh]">
+            <div class="text-center mb-6 md:mb-8">
+                <h2 class="font-display text-2xl md:text-4xl text-primary mb-2">¡BIENVENIDO!</h2>
+                <p class="text-gray-400 text-sm md:text-lg">Finaliza tu registro para activar tu tarjeta.</p>
+            </div>
+
+            <form id="onboarding-form" class="space-y-4 md:space-y-6">
+                <!-- Form content same as before -->
+                <div class="flex flex-col items-center mb-6">
+                    <div class="relative group">
+                        <img id="onboarding-avatar" src="" alt="Avatar" class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-primary shadow-[0_0_20px_var(--color-shadow)] bg-gray-800">
+                        <div class="absolute bottom-0 right-0 bg-gray-900 text-primary text-[10px] px-2 py-1 rounded border border-primary">LOCKED</div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Tu avatar único de miembro.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div>
+                        <label for="new-fullname" class="block mb-2 text-sm font-display text-gray-300">Nombre Completo</label>
+                        <input type="text" id="new-fullname" class="input-style w-full p-3 rounded-lg font-display text-base" placeholder="Ej: Juan Pérez" required>
+                    </div>
+                    <div>
+                        <label for="new-sex" class="block mb-2 text-sm font-display text-gray-300">Sexo</label>
+                        <select id="new-sex" class="input-style select-style w-full p-3 rounded-lg font-display text-base cursor-pointer" required>
+                            <option value="" disabled selected>Selecciona...</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                            <option value="O">Otro</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label for="new-birthday" class="block mb-2 text-sm font-display text-gray-300">Cumpleaños</label>
+                    <input type="date" id="new-birthday" class="input-style w-full p-3 rounded-lg font-display text-base" required>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 md:px-8 md:py-4 rounded-lg font-bold text-lg shadow-lg hover:shadow-primary/50 transition-all duration-300">
+                        FINALIZAR REGISTRO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main-content" class="hidden">
+        <header class="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-gray-800">
+            <nav class="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
+                <a href="#" onclick="goToHome(); return false;" class="flex items-center gap-2 md:gap-3 group">
+                    <img src="https://i.postimg.cc/nr2MfJ35/1762826387722.png" alt="Griffin's Logo" class="h-10 md:h-14 logo-glow group-hover:scale-110 transition-transform">
+                    <span class="text-xl md:text-3xl font-display font-bold logo-animated">GRIFFIN'S</span>
+                </a>
+                
+                <div class="hidden md:flex space-x-6 items-center">
+                    <a href="#" onclick="goToHome(); return false;" class="text-gray-300 hover:text-primary transition duration-300 flex items-center"><i class="fas fa-home mr-2"></i> Inicio</a>
+                    <a href="#lealtad" class="text-gray-300 hover:text-primary transition duration-300 flex items-center"><i class="fas fa-id-card mr-2"></i> Lealtad</a>
+                    <button type="button" id="nav-barberos-desktop" class="text-gray-300 hover:text-primary transition duration-300 hidden flex items-center"><i class="fas fa-cut mr-2"></i> Barberos</button>
+                    <a href="#niveles" class="text-gray-300 hover:text-primary transition duration-300 flex items-center"><i class="fas fa-layer-group mr-2"></i> Niveles</a>
+                    <a href="#beneficios" class="text-gray-300 hover:text-primary transition duration-300 flex items-center"><i class="fas fa-gift mr-2"></i> Beneficios</a>
+                    <a id="nav-historial-desktop" href="#historial" class="text-gray-300 hover:text-primary transition duration-300 flex items-center"><i class="fas fa-history mr-2"></i> Historial</a>
+                    <button onclick="openThemeModal()" class="text-gray-300 hover:text-primary transition duration-300 flex items-center gap-2 px-3 py-2 border border-gray-700 rounded-lg hover:border-primary"><i class="fas fa-gem text-primary animate-pulse"></i> <span class="hidden lg:inline">Temas</span></button>
+                    <a href="https://api.whatsapp.com/send?phone=5215571508193" target="_blank" class="bg-gradient-to-r from-primary to-secondary text-white px-5 py-2 rounded-lg font-bold shadow-lg hover:shadow-primary/50 transition-all hover:scale-105">Reservar Cita</a>
+                    <button id="logout-btn-desktop" class="text-gray-400 hover:text-red-500 ml-4 transition"><i class="fas fa-sign-out-alt mr-1"></i> Salir</button>
+                </div>
+                <button id="menu-btn" class="md:hidden text-primary text-2xl z-50 p-2"><i class="fas fa-bars"></i></button>
+            </nav>
+            
+            <div id="mobile-menu" class="hidden md:hidden fixed inset-0 w-full h-screen bg-black/95 flex flex-col items-center justify-center space-y-6 text-xl font-display z-40">
+                <a href="#" onclick="goToHome(); document.getElementById('mobile-menu').classList.add('hidden'); return false;" class="mobile-link text-gray-300 hover:text-primary flex items-center"><i class="fas fa-home mr-2"></i> Inicio</a>
+                <a href="#lealtad" class="mobile-link text-gray-300 hover:text-primary flex items-center"><i class="fas fa-id-card mr-2"></i> Lealtad</a>
+                <button type="button" id="nav-barberos-mobile" class="mobile-link text-gray-300 hover:text-primary hidden flex items-center"><i class="fas fa-cut mr-2"></i> Barberos</button>
+                <a href="#niveles" class="mobile-link text-gray-300 hover:text-primary flex items-center"><i class="fas fa-layer-group mr-2"></i> Niveles</a>
+                <a href="#beneficios" class="mobile-link text-gray-300 hover:text-primary flex items-center"><i class="fas fa-gift mr-2"></i> Beneficios</a>
+                <a id="nav-historial-mobile" href="#historial" class="mobile-link text-gray-300 hover:text-primary flex items-center"><i class="fas fa-history mr-2"></i> Historial</a>
+                <button onclick="openThemeModal()" class="text-gray-300 hover:text-primary flex items-center gap-2 text-lg border border-gray-700 px-6 py-2 rounded-full"><i class="fas fa-gem text-primary"></i> Temas</button>
+                <a href="https://api.whatsapp.com/send?phone=5215571508193" target="_blank" class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-bold mt-4">Reservar Cita</a>
+                <button id="logout-btn-mobile" class="text-gray-500 hover:text-red-500 text-lg mt-8"><i class="fas fa-sign-out-alt mr-2"></i> Salir</button>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 md:px-6 py-8 md:py-16">
+            <!-- LEALTAD -->
+            <section id="lealtad" class="flex flex-col lg:flex-row items-center justify-center gap-8 md:gap-12 my-4 md:my-12">
+                <div class="w-full max-w-lg flex flex-col items-center">
+                    <div id="user-status" class="text-center mb-4 md:mb-6">
+                        <h3 class="text-lg md:text-xl font-display text-white">Hola, <span id="welcome-name" class="text-primary">Cliente VIP</span></h3>
+                        <div id="current-level-display" class="mt-1 md:mt-2 text-xl md:text-2xl font-display transition-all duration-500 level-bronze">
+                            <i id="level-icon" class="fas fa-award mr-2 icon-glow"></i><span id="level-name">Nivel Bronce</span>
+                        </div>
+                    </div>
+
+                    <div class="w-full card-container px-2 md:px-0">
+                        <div id="loyalty-card" class="loyalty-card card-style w-full rounded-2xl p-5 md:p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden min-h-[350px] md:min-h-[400px]">
+                            <div class="flex justify-between items-center card-logo">
+                                <span class="font-display text-2xl md:text-3xl text-primary tracking-wider font-bold">GRIFFIN'S</span>
+                                <i class="fas fa-user-shield text-2xl md:text-3xl text-primary"></i>
+                            </div>
+                            
+                            <div class="my-4 md:my-6 card-grid flex-grow flex flex-col justify-center">
+                                <h3 class="text-center font-display text-base md:text-lg mb-3 md:mb-4 text-gray-300">TU CAMINO A PLATINUM</h3>
+                                <div id="stamp-grid" class="grid grid-cols-5 gap-2 md:gap-4 w-full max-w-md mx-auto">
+                                    <!-- SE GENERA POR JS -->
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-end card-footer mt-2">
+                                <div>
+                                    <span class="block text-[10px] md:text-xs text-gray-400">Miembro desde</span>
+                                    <span id="member-since-date" class="block text-base md:text-lg font-bold">--/--/----</span>
+                                </div>
+                                <i class="fas fa-qrcode text-4xl md:text-5xl text-gray-200"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-full lg:w-1/2 text-center lg:text-left mt-4 md:mt-0">
+                    <h3 class="font-display text-xl md:text-2xl text-primary mb-1 md:mb-2">MEMBRESÍA VIP</h3>
+                    <h1 class="text-3xl md:text-5xl font-display font-bold text-white mb-3 md:mb-4">TU LEALTAD, <span class="text-primary">RECOMPENSADA.</span></h1>
+                    <p class="text-base md:text-lg text-gray-300 mb-6 md:mb-8 px-2 md:px-0">Cada corte te acerca a beneficios exclusivos. Registra tu visita y observa la magia.</p>
+                    <div class="w-full bg-gray-800 rounded-full h-3 md:h-4 mb-2 overflow-hidden border border-gray-700 mx-auto lg:mx-0 max-w-md">
+                        <div id="progress-bar" class="progress-bar-inner h-full rounded-full" style="width: 0%;"></div>
+                    </div>
+                    <p id="progress-message" class="text-primary font-bold mb-6 md:mb-8 text-sm md:text-base animate-pulse">¡Bienvenido! Inicias en Nivel Bronce.</p>
+                    <button id="add-visit-btn" class="w-full max-w-xs bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 md:px-8 md:py-4 rounded-lg font-bold text-lg shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-105 active:scale-95"><i class="fas fa-check-circle mr-2"></i> Registrar Visita</button>
+                </div>
+            </section>
+
+            <!-- NIVELES -->
+            <section id="niveles" class="my-12 md:my-32">
+                <h2 class="font-display text-2xl md:text-4xl text-center mb-8 md:mb-16 text-white">ESCALA LOS NIVELES</h2>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
+                    <!-- BRONCE -->
+                    <div class="border-2 border-gray-700 p-4 md:p-8 rounded-2xl text-center bg-gray-900/50 transition-all duration-300 hover:border-gray-500 hover:shadow-2xl hover:shadow-amber-700/20 transform hover:-translate-y-2">
+                        <i class="fas fa-award text-4xl md:text-7xl mb-3 md:mb-6 level-bronze"></i>
+                        <h3 class="font-display text-lg md:text-3xl mb-2 md:mb-4 level-bronze">BRONCE</h3>
+                        <p class="text-gray-400 text-xs md:text-base mb-3 md:mb-6">Visitas: 0 - 4</p>
+                        <div class="group relative overflow-hidden rounded-lg">
+                            <img src="https://placehold.co/400x300/a5734b/000000?text=Bronce" class="w-full opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110">
+                            <div class="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                <p class="text-white text-xs md:text-lg p-2 md:p-4 font-bold">Acumula 5 visitas</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- SILVER -->
+                    <div class="border-2 border-gray-700 p-4 md:p-8 rounded-2xl text-center bg-gray-900/50 transition-all duration-300 hover:border-gray-500 hover:shadow-2xl hover:shadow-gray-500/20 transform hover:-translate-y-2">
+                        <i class="fas fa-shield-alt text-4xl md:text-7xl mb-3 md:mb-6 level-silver"></i>
+                        <h3 class="font-display text-lg md:text-3xl mb-2 md:mb-4 level-silver">SILVER</h3>
+                        <p class="text-gray-400 text-xs md:text-base mb-3 md:mb-6">Visitas: 5 - 9</p>
+                        <div class="group relative overflow-hidden rounded-lg">
+                            <img src="https://placehold.co/400x300/c0c0c0/000000?text=Silver" class="w-full opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110">
+                            <div class="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                <p class="text-white text-xs md:text-lg p-2 md:p-4 font-bold">50% Off + Ceja</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- GOLD -->
+                    <div class="border-2 border-yellow-700/50 p-4 md:p-8 rounded-2xl text-center bg-gray-900/50 transition-all duration-300 hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/20 transform hover:-translate-y-2">
+                        <i class="fas fa-medal text-4xl md:text-7xl mb-3 md:mb-6 level-gold"></i>
+                        <h3 class="font-display text-lg md:text-3xl mb-2 md:mb-4 level-gold">GOLD</h3>
+                        <p class="text-gray-400 text-xs md:text-base mb-3 md:mb-6">Visitas: 10 - 14</p>
+                        <div class="group relative overflow-hidden rounded-lg">
+                            <img src="https://placehold.co/400x300/ffd700/000000?text=Gold" class="w-full opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110">
+                            <div class="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                <p class="text-white text-xs md:text-lg p-2 md:p-4 font-bold">Polvo Texturas Gratis</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- PLATINUM -->
+                    <div class="border-2 border-gray-700 p-4 md:p-8 rounded-2xl text-center bg-gray-900/50 transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transform hover:-translate-y-2">
+                        <i class="fas fa-gem text-4xl md:text-7xl mb-3 md:mb-6 level-platinum"></i>
+                        <h3 class="font-display text-lg md:text-3xl mb-2 md:mb-4 level-platinum">PLATINUM</h3>
+                        <p class="text-gray-400 text-xs md:text-base mb-3 md:mb-6">Visitas: 15</p>
+                        <div class="group relative overflow-hidden rounded-lg">
+                            <img src="https://placehold.co/400x300/e5e4e2/000000?text=Platinum" class="w-full opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110">
+                            <div class="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                <p class="text-white text-xs md:text-lg p-2 md:p-4 font-bold">Ceja/Barba + Pomada</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BENEFICIOS Y HISTORIAL (Contenido igual) -->
+            <section id="beneficios" class="my-12 md:my-32 max-w-4xl mx-auto">
+                <h2 class="font-display text-2xl md:text-4xl text-center mb-8 md:mb-16 text-white">REGLAS Y BENEFICIOS</h2>
+                <div class="space-y-3 md:space-y-4">
+                    <div class="border border-gray-700 rounded-lg overflow-hidden bg-gray-900/50 hover:border-gray-500 transition-colors">
+                        <button class="accordion-header w-full p-4 md:p-6 text-left flex justify-between items-center focus:outline-none">
+                            <span class="text-lg md:text-xl font-display text-primary">¿Cómo funciona?</span>
+                            <i class="fas fa-chevron-down accordion-icon text-primary"></i>
+                        </button>
+                        <div class="accordion-content px-4 md:px-6 pt-0">
+                            <p class="text-gray-300 text-sm md:text-base pb-4">Cada vez que pagues por un corte de cabello, presiona "Registrar Visita" e introduce el ID de tu barbero para validar el corte.</p>
+                        </div>
+                    </div>
+                    <div class="border border-gray-700 rounded-lg overflow-hidden bg-gray-900/50 hover:border-gray-500 transition-colors">
+                        <button class="accordion-header w-full p-4 md:p-6 text-left flex justify-between items-center focus:outline-none">
+                            <span class="text-lg md:text-xl font-display text-primary">Premios por nivel</span>
+                            <i class="fas fa-chevron-down accordion-icon text-primary"></i>
+                        </button>
+                        <div class="accordion-content px-4 md:px-6 pt-0">
+                            <ul class="list-disc list-inside text-gray-300 space-y-2 text-sm md:text-base pb-4">
+                                <li><strong class="text-amber-500">Bronce (1-4):</strong> Acumulando.</li>
+                                <li><strong class="text-gray-300">Silver (5):</strong> 50% Dto. + Ceja.</li>
+                                <li><strong class="text-yellow-400">Gold (10):</strong> Polvo Texturas ($150).</li>
+                                <li><strong class="text-blue-300">Platinum (15):</strong> Ceja/Barba + Pomada ($200).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Más acordeones si son necesarios -->
+                </div>
+            </section>
+
+            <section id="historial" class="my-12 md:my-32 max-w-4xl mx-auto">
+                <h2 class="font-display text-2xl md:text-4xl text-center mb-6 md:mb-8 text-white">HISTORIAL</h2>
+                <div class="border border-gray-700 rounded-lg bg-gray-900/50 p-4 md:p-8 mb-8 md:mb-16">
+                    <h3 class="text-primary font-display mb-4 text-lg flex items-center"><i class="fas fa-bolt mr-2"></i>TARJETA ACTUAL</h3>
+                    <p id="history-empty-message" class="text-center text-gray-400 text-sm md:text-lg hidden">Inicia tu nueva tarjeta registrando una visita.</p>
+                    <div id="history-list-container" class="space-y-3 md:space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar mb-8"></div>
+                    <div id="archived-cards-section" class="hidden border-t border-gray-700 pt-6">
+                        <h3 class="text-yellow-500 font-display mb-4 text-lg flex items-center"><i class="fas fa-trophy mr-2"></i>TARJETAS TERMINADAS</h3>
+                        <div id="archived-list-container" class="space-y-3"></div>
+                    </div>
+                </div>
+                <div class="border-2 border-gray-700 rounded-lg bg-gray-900/80 p-4 md:p-8 shadow-[0_0_30px_var(--color-shadow)]" style="border-color: rgba(var(--color-shadow), 0.5)">
+                    <h3 class="text-primary font-display mb-4 text-lg text-center animate-pulse">PREMIOS GANADOS</h3>
+                    <p id="rewards-empty-message" class="text-center text-gray-400 text-sm md:text-lg hidden">Aún no has desbloqueado premios.</p>
+                    <div id="rewards-list-container" class="space-y-3 md:space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- THEME MODAL -->
+        <div id="theme-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 hidden">
+            <div id="theme-modal-backdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+            <div class="card-style relative z-10 w-full max-w-3xl rounded-2xl p-6 md:p-10 shadow-2xl border-2 border-gray-700">
+                <button id="theme-modal-close" class="absolute top-4 right-4 text-3xl text-gray-400 hover:text-white transition-colors">&times;</button>
+                <h2 class="font-display text-2xl md:text-4xl text-center mb-2 text-white">PERSONALIZA TU EXPERIENCIA</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                    <div onclick="selectTheme('default')" class="theme-option group cursor-pointer rounded-xl overflow-hidden border-2 border-cyan-500/30 bg-[#0a0a0a] relative h-64 transition-all">
+                        <div class="absolute inset-0 bg-gradient-to-br from-cyan-900/20 to-blue-900/20"></div>
+                        <div class="p-6 flex flex-col items-center justify-center h-full relative z-10">
+                            <i class="fas fa-bolt text-white text-2xl mb-4 bg-cyan-500 p-4 rounded-full shadow-[0_0_20px_#22d3ee]"></i>
+                            <h3 class="font-display text-cyan-400 text-xl">CYBER BLUE</h3>
+                        </div>
+                    </div>
+                    <div onclick="selectTheme('red')" class="theme-option group cursor-pointer rounded-xl overflow-hidden border-2 border-red-500/30 bg-[#0a0505] relative h-64 transition-all">
+                        <div class="absolute inset-0 bg-gradient-to-br from-red-900/20 to-rose-900/20"></div>
+                        <div class="p-6 flex flex-col items-center justify-center h-full relative z-10">
+                            <i class="fas fa-fire text-white text-2xl mb-4 bg-red-600 p-4 rounded-full shadow-[0_0_20px_#ef4444]"></i>
+                            <h3 class="font-display text-red-500 text-xl">CYBER RED</h3>
+                        </div>
+                    </div>
+                    <div onclick="selectTheme('green')" class="theme-option group cursor-pointer rounded-xl overflow-hidden border-2 border-green-500/30 bg-[#050a05] relative h-64 transition-all">
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-900/20 to-emerald-900/20"></div>
+                        <div class="p-6 flex flex-col items-center justify-center h-full relative z-10">
+                            <i class="fas fa-biohazard text-white text-2xl mb-4 bg-green-600 p-4 rounded-full shadow-[0_0_20px_#22c55e]"></i>
+                            <h3 class="font-display text-green-500 text-xl">CYBER GREEN</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OTHER MODALS -->
+        <div id="barber-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+            <div id="modal-backdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+            <div class="modal-content card-style relative z-10 w-full max-w-4xl rounded-2xl p-4 md:p-8 shadow-2xl max-h-[80vh] overflow-y-auto">
+                <button id="modal-close-btn" class="absolute top-2 right-4 text-3xl text-primary hover:text-white transition-colors">&times;</button>
+                <h2 class="font-display text-2xl md:text-4xl text-center mb-6 md:mb-12 text-white">NUESTROS BARBEROS</h2>
+                <div id="barbers-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6"></div>
+            </div>
+        </div>
+
+        <div id="barber-id-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+            <div id="barber-id-modal-backdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+            <div class="card-style relative z-10 w-full max-w-md rounded-2xl p-6 md:p-8 shadow-2xl">
+                <button id="barber-id-modal-close" class="absolute top-2 right-4 text-3xl text-primary hover:text-white transition-colors">&times;</button>
+                <h2 class="font-display text-2xl md:text-3xl text-center mb-6 text-white">Registrar Visita</h2>
+                <form id="barber-id-form">
+                    <div class="mb-4 md:mb-6"><label class="block mb-2 text-sm font-display text-gray-300">ID del Barbero</label><input type="text" id="barber-id-input" class="input-style w-full p-3 rounded-lg text-lg" placeholder="Ej: O1221" required></div>
+                    <p id="barber-id-error" class="text-red-500 text-center mb-4 hidden">ID incorrecto.</p>
+                    <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 md:px-8 md:py-4 rounded-lg font-bold text-lg hover:scale-105 transform transition-all">Verificar</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="archived-card-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" id="archived-modal-backdrop"></div>
+            <div class="card-style relative z-10 w-full max-w-2xl rounded-2xl p-6 md:p-8 shadow-2xl max-h-[80vh] overflow-y-auto">
+                <button id="archived-modal-close" class="absolute top-2 right-4 text-3xl text-primary hover:text-white transition-colors">&times;</button>
+                <h2 id="archived-modal-title" class="font-display text-2xl md:text-3xl text-center mb-2 text-yellow-500">TARJETA TERMINADA</h2>
+                <p id="archived-modal-date" class="text-center text-gray-400 mb-6 text-sm"></p>
+                <div class="border-b border-gray-700 mb-4"></div>
+                <div id="archived-visits-container" class="space-y-3 custom-scrollbar pr-2"></div>
+            </div>
+        </div>
+
+        <footer class="bg-gray-900 pt-16 md:pt-24 pb-8 md:pb-12 angled-footer relative -mt-16 md:-mt-20">
+            <div class="container mx-auto px-6 text-center text-gray-400">
+                <div class="flex justify-center space-x-8 mb-6 md:mb-8">
+                    <a href="https://instagram.com" target="_blank" class="text-2xl md:text-3xl hover:text-primary transition-colors duration-300"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/profile.php?id=100060439646903" target="_blank" class="text-2xl md:text-3xl hover:text-primary transition-colors duration-300"><i class="fab fa-facebook"></i></a>
+                    <a href="https://tiktok.com" target="_blank" class="text-2xl md:text-3xl hover:text-primary transition-colors duration-300"><i class="fab fa-tiktok"></i></a>
+                </div>
+                <p class="mb-2 md:mb-4 text-sm md:text-base">Francisco Covarrubias & Cuauhtémoc, Francisco Covarrubias 101-Int B, Centro, 42000 Pachuca de Soto, Hgo.</p>
+                <p class="text-xs md:text-sm">&copy; 2025 Griffin's Barber Shop.</p>
+            </div>
+        </footer>
+        <a href="https://api.whatsapp.com/send?phone=5215571508193" target="_blank" class="cta-button fixed bottom-4 right-4 md:bottom-6 md:right-6 bg-gradient-to-r from-primary to-secondary text-white w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-2xl z-50 hover:scale-110 transition-transform"><i class="fab fa-whatsapp text-3xl md:text-4xl"></i></a>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN PRINCIPAL ---
+        const THEME_KEY = 'griffins_theme_v1';
+        const DB_KEY = 'griffins_db_v9_secure'; // KEY NUEVA PARA EVITAR CORRUPCIÓN
+        const SESSION_KEY = 'griffins_session_v9';
+
+        const PROGRESS_MESSAGES = [
+            "¡Bienvenido! Inicias en Nivel Bronce.",
+            "¡Primer corte! (1/15)",
+            "¡Sigue sumando en Bronce! (2/15)",
+            "¡Vamos por más! (3/15)",
+            "¡Casi llegas a Silver! (4/15)",
+            "¡NIVEL SILVER ALCANZADO! (5/15)",
+            "¡Disfruta tus beneficios Silver! (6/15)",
+            "¡Sigue subiendo! (7/15)",
+            "¡Rumbo a Gold! (8/15)",
+            "¡Un paso más! (9/15)",
+            "¡NIVEL GOLD ALCANZADO! (10/15)",
+            "¡Eres un cliente de oro! (11/15)",
+            "¡Camino a la cima! (12/15)",
+            "¡Casi Platinum! (13/15)",
+            "¡Solo uno más! (14/15)",
+            "¡MÁXIMO NIVEL PLATINUM! (15/15)"
+        ];
+
+        const INITIAL_USERS = [
+            { id: 1001, name: "Administrador", username: "Griffins", password: "Griffins" },
+            { id: 1002, name: "Miembro Vip2", username: "usuario2", password: "admin" },
+            { id: 1003, name: "Miembro Vip3", username: "usuario3", password: "admin" },
+            { id: 1004, name: "Miembro Vip4", username: "usuario4", password: "admin" },
+            { id: 1005, name: "Miembro Vip5", username: "usuario5", password: "admin" },
+            { id: 1006, name: "Miembro Vip6", username: "usuario6", password: "admin" },
+            { id: 1007, name: "Miembro Vip7", username: "usuario7", password: "admin" },
+            { id: 1008, name: "Miembro Vip8", username: "usuario8", password: "admin" },
+            { id: 1009, name: "Miembro Vip9", username: "usuario9", password: "admin" },
+            { id: 1010, name: "Miembro Vip10", username: "usuario10", password: "admin" },
+            { id: 1011, name: "Miembro Vip11", username: "usuario11", password: "admin" },
+            { id: 1012, name: "Miembro Vip12", username: "usuario12", password: "admin" },
+            { id: 1013, name: "Miembro Vip13", username: "usuario13", password: "admin" },
+            { id: 1014, name: "Miembro Vip14", username: "usuario14", password: "admin" },
+            { id: 1015, name: "Miembro Vip15", username: "usuario15", password: "admin" }
+        ];
+
+        const BARBERS_LIST = [
+            { name: 'Oscar', id: 'O1221', photoUrl: 'https://placehold.co/400x400/1a1a1a/00e6e6?text=Oscar' },
+            { name: 'Angel', id: 'A1222', photoUrl: 'https://placehold.co/400x400/1a1a1a/c0c0c0?text=Angel' },
+            { name: 'Tony', id: 'T1223', photoUrl: 'https://placehold.co/400x400/1a1a1a/ffd700?text=Tony' },
+            { name: 'Luis', id: 'L1224', photoUrl: 'https://placehold.co/400x400/1a1a1a/e5e4e2?text=Luis' },
+            { name: 'Rodrigo', id: 'R1225', photoUrl: 'https://placehold.co/400x400/1a1a1a/a5734b?text=Rodrigo' }
+        ];
+
+        // Variables Globales
+        let users = [];
+        let userDataDB = {}; 
+        let currentUser = null;
+
+        // --- SISTEMA DE PERSISTENCIA ROBUSTO ---
+        function initializeDatabase() {
+            // 1. Cargar crudo desde LS
+            const storedData = localStorage.getItem(DB_KEY);
+            
+            // 2. Parsear o inicializar vacío
+            try {
+                userDataDB = storedData ? JSON.parse(storedData) : {};
+            } catch (e) {
+                console.error("Error al leer DB, reiniciando...", e);
+                userDataDB = {};
+            }
+
+            // 3. Mapear usuarios asegurando la fusión de datos
+            users = INITIAL_USERS.map(baseUser => {
+                const savedData = userDataDB[baseUser.username] || {};
+                
+                return {
+                    ...baseUser,
+                    // Aseguramos que si savedData.history existe, se use. Si no, array vacío.
+                    history: Array.isArray(savedData.history) ? savedData.history : [],
+                    archivedCards: Array.isArray(savedData.archivedCards) ? savedData.archivedCards : [],
+                    rewardsHistory: Array.isArray(savedData.rewardsHistory) ? savedData.rewardsHistory : [],
+                    isProfileComplete: savedData.isProfileComplete || false,
+                    fullName: savedData.fullName || baseUser.name,
+                    birthday: savedData.birthday || null,
+                    sex: savedData.sex || null,
+                    memberSince: savedData.memberSince || null,
+                    avatar: savedData.avatar || null
+                };
+            });
+            console.log("Base de datos inicializada correctamente.");
+        }
+
+        function saveUserData(username) {
+            const user = users.find(u => u.username === username);
+            if (!user) return;
+
+            // Actualizamos la entrada específica en el objeto DB global
+            userDataDB[username] = {
+                history: user.history,
+                archivedCards: user.archivedCards,
+                rewardsHistory: user.rewardsHistory,
+                isProfileComplete: user.isProfileComplete,
+                fullName: user.fullName,
+                birthday: user.birthday,
+                sex: user.sex,
+                memberSince: user.memberSince,
+                avatar: user.avatar
+            };
+
+            // Escribimos todo el objeto DB de nuevo al storage
+            try {
+                localStorage.setItem(DB_KEY, JSON.stringify(userDataDB));
+                console.log(`Datos guardados para ${username}`);
+                showToast(); // Feedback visual
+            } catch (e) {
+                alert("Error crítico: No se pudo guardar en el almacenamiento local. Verifica espacio o permisos.");
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast-notification');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // --- NAVEGACIÓN Y TEMAS ---
+        function goToHome() {
+            const lealtadSection = document.getElementById('lealtad');
+            if(lealtadSection) lealtadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            else window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.openThemeModal = () => document.getElementById('theme-modal').classList.remove('hidden');
+        document.getElementById('theme-modal-close').onclick = () => document.getElementById('theme-modal').classList.add('hidden');
+        document.getElementById('theme-modal-backdrop').onclick = () => document.getElementById('theme-modal').classList.add('hidden');
+
+        window.selectTheme = (theme) => {
+            document.body.classList.remove('theme-red', 'theme-green');
+            if(theme === 'red') document.body.classList.add('theme-red');
+            if(theme === 'green') document.body.classList.add('theme-green');
+            localStorage.setItem(THEME_KEY, theme);
+            document.getElementById('theme-modal').classList.add('hidden');
+            goToHome();
+        };
+
+        function initTheme() {
+            const saved = localStorage.getItem(THEME_KEY);
+            if(saved) window.selectTheme(saved);
+        }
+
+        // --- EVENTOS PRINCIPALES ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initializeDatabase(); // Carga inicial crítica
+
+            const savedSession = localStorage.getItem(SESSION_KEY);
+            
+            // Autologin si hay sesión
+            if(savedSession) {
+                const found = users.find(u => u.username === savedSession);
+                if(found) {
+                    currentUser = found;
+                    document.getElementById('login-screen').classList.add('hidden');
+                    loadApp();
+                } else {
+                    document.getElementById('login-screen').classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('login-screen').classList.remove('hidden');
+            }
+
+            // Evento Login
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const uInput = document.getElementById('username').value;
+                const pInput = document.getElementById('password').value;
+                const foundUser = users.find(u => u.username === uInput && u.password === pInput);
+
+                if (foundUser) {
+                    currentUser = foundUser;
+                    checkOnboardingStatus(); 
+                } else {
+                    document.getElementById('login-error').classList.remove('hidden');
+                }
+            });
+
+            // Evento Registrar Visita
+            document.getElementById('barber-id-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = document.getElementById('barber-id-input').value.toUpperCase();
+                const barber = BARBERS_LIST.find(b => b.id === id);
+                
+                if(barber) {
+                    // 1. Modificar datos en memoria
+                    currentUser.history.push({ barberName: barber.name, barberId: barber.id, date: new Date().toISOString() });
+                    
+                    // Lógica de Premios
+                    const newCount = currentUser.history.length;
+                    const prizeDate = new Date().toISOString();
+                    if (newCount === 5) currentUser.rewardsHistory.push({ type: 'Silver', title: 'NIVEL SILVER', detail: '50% Dto. + Ceja', date: prizeDate });
+                    else if (newCount === 10) currentUser.rewardsHistory.push({ type: 'Gold', title: 'NIVEL GOLD', detail: 'Polvo Texturas', date: prizeDate });
+                    else if (newCount === 15) currentUser.rewardsHistory.push({ type: 'Platinum', title: 'NIVEL PLATINUM', detail: 'Ceja/Barba + Pomada', date: prizeDate });
+
+                    // 2. GUARDADO INMEDIATO CRÍTICO
+                    saveUserData(currentUser.username);
+                    
+                    // 3. Actualizar UI
+                    loadUserProgress();
+                    document.getElementById('barber-id-modal').classList.add('hidden');
+                } else {
+                    document.getElementById('barber-id-error').classList.remove('hidden');
+                }
+            });
+
+            // Otros eventos
+            document.getElementById('add-visit-btn').addEventListener('click', () => {
+                if(currentUser.history.length === 15) {
+                    // Archivar tarjeta
+                    const finishedCard = {
+                        number: currentUser.archivedCards.length + 1,
+                        finishDate: new Date().toISOString(),
+                        visits: [...currentUser.history]
+                    };
+                    currentUser.archivedCards.push(finishedCard);
+                    currentUser.history = [];
+                    saveUserData(currentUser.username); // Guardar cambios
+                    loadUserProgress();
+                } else {
+                    document.getElementById('barber-id-modal').classList.remove('hidden');
+                    document.getElementById('barber-id-input').value = '';
+                    document.getElementById('barber-id-error').classList.add('hidden');
+                }
+            });
+
+            // Cierres de Modales
+            document.querySelectorAll('[id$="-close"]').forEach(btn => btn.addEventListener('click', () => document.getElementById('barber-id-modal').classList.add('hidden')));
+            document.getElementById('modal-close-btn').addEventListener('click', () => {
+                document.getElementById('barber-modal').classList.add('hidden');
+                goToHome();
+            });
+            document.getElementById('archived-modal-close').onclick = () => document.getElementById('archived-card-modal').classList.add('hidden');
+            
+            // Onboarding
+            document.getElementById('onboarding-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newFullname = document.getElementById('new-fullname');
+                const newSex = document.getElementById('new-sex');
+                const newBirthday = document.getElementById('new-birthday');
+                
+                currentUser.fullName = newFullname.value.trim();
+                currentUser.sex = newSex.value;
+                currentUser.birthday = newBirthday.value;
+                currentUser.memberSince = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                currentUser.isProfileComplete = true;
+                
+                saveUserData(currentUser.username);
+                localStorage.setItem(SESSION_KEY, currentUser.username);
+                
+                document.getElementById('onboarding-modal').classList.add('hidden');
+                loadApp();
+            });
+
+            // Menu movil
+            document.getElementById('menu-btn').onclick = () => document.getElementById('mobile-menu').classList.toggle('hidden');
+            document.getElementById('logout-btn-desktop').onclick = logout;
+            document.getElementById('logout-btn-mobile').onclick = logout;
+            
+            // Tarjeta 3D
+            const card = document.querySelector('.loyalty-card');
+            const container = document.querySelector('.card-container');
+            const handleMove = (clientX, clientY) => {
+                const rect = container.getBoundingClientRect();
+                const x = (clientX - rect.left) / rect.width - 0.5;
+                const y = (clientY - rect.top) / rect.height - 0.5;
+                card.style.transform = `rotateY(${x * 20}deg) rotateX(${y * -20}deg)`;
+            };
+            container.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+            container.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                handleMove(touch.clientX, touch.clientY);
+            }, { passive: true });
+            container.addEventListener('mouseleave', () => card.style.transform = 'rotateY(0) rotateX(0)');
+            container.addEventListener('touchend', () => card.style.transform = 'rotateY(0) rotateX(0)');
+        });
+
+        function checkOnboardingStatus() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('login-form').reset();
+            if (currentUser.isProfileComplete) {
+                localStorage.setItem(SESSION_KEY, currentUser.username);
+                loadApp();
+            } else {
+                const avatarUrl = `https://robohash.org/${currentUser.id}?set=set3&bgset=bg2`; 
+                currentUser.avatar = avatarUrl; 
+                document.getElementById('onboarding-avatar').src = avatarUrl;
+                document.getElementById('onboarding-modal').classList.remove('hidden');
+            }
+        }
+
+        function loadApp() {
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('welcome-name').textContent = currentUser.fullName;
+            document.getElementById('member-since-date').textContent = currentUser.memberSince;
+            
+            // 1. GENERAR SELLOS (Siempre, optimizado)
+            const grid = document.getElementById('stamp-grid');
+            let html = '';
+            const icons = ['fa-cut', 'fa-cut', 'fa-cut', 'fa-cut', 'fa-shield-alt', 'fa-cut', 'fa-cut', 'fa-cut', 'fa-cut', 'fa-medal', 'fa-cut', 'fa-cut', 'fa-cut', 'fa-cut', 'fa-gem'];
+            icons.forEach((icon, i) => {
+                const isBonus = (i+1)%5 === 0;
+                let colorClass = '';
+                if(i === 4) colorClass = 'text-gray-400';
+                if(i === 9) colorClass = 'text-yellow-500';
+                if(i === 14) colorClass = 'text-blue-300';
+                html += `<div class="stamp aspect-square rounded-full flex items-center justify-center border-gray-600 text-xs md:text-base"><i class="fas ${icon} opacity-30 ${isBonus ? colorClass : ''}"></i></div>`;
+            });
+            grid.innerHTML = html; // Una sola inserción DOM
+
+            // 2. CARGAR ESTADO
+            loadUserProgress();
+            updateAdminUI(currentUser.username === 'Griffins');
+        }
+
+        function loadUserProgress() {
+            const stamps = document.querySelectorAll('#stamp-grid .stamp');
+            stamps.forEach(s => { 
+                s.classList.remove('stamped'); 
+                s.querySelector('i').classList.add('opacity-30'); 
+            });
+
+            const count = currentUser.history.length;
+            // Pintar sellos
+            for(let i=0; i<count; i++) {
+                if (stamps[i]) {
+                    stamps[i].classList.add('stamped');
+                    stamps[i].querySelector('i').classList.remove('opacity-30');
+                }
+            }
+            
+            updateLevelUI(count);
+            updateProgressBar(count);
+            renderHistory();
+            renderRewardsHistory();
+        }
+
+        function updateLevelUI(count) {
+            const display = document.getElementById('current-level-display');
+            const icon = document.getElementById('level-icon');
+            const name = document.getElementById('level-name');
+            let lvl = 'Bronce', cls='level-bronze', ico='fa-award';
+            if(count>=15) { lvl='Platinum'; cls='level-platinum'; ico='fa-gem'; }
+            else if(count>=10) { lvl='Gold'; cls='level-gold'; ico='fa-medal'; }
+            else if(count>=5) { lvl='Silver'; cls='level-silver'; ico='fa-shield-alt'; }
+            name.textContent = `Nivel ${lvl}`;
+            icon.className = `fas ${ico} mr-2 icon-glow`;
+            display.className = `mt-1 md:mt-2 text-xl md:text-2xl font-display transition-all duration-500 ${cls}`;
+        }
+
+        function updateProgressBar(count) {
+            const bar = document.getElementById('progress-bar');
+            const msg = document.getElementById('progress-message');
+            bar.style.width = `${(count/15)*100}%`;
+            msg.textContent = PROGRESS_MESSAGES[count] || `Visitas: ${count} / 15`;
+            
+            const btn = document.getElementById('add-visit-btn');
+            if(count===15) btn.textContent = "¡Reiniciar Tarjeta!";
+            else btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Registrar Visita';
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-list-container');
+            const archivedSection = document.getElementById('archived-cards-section');
+            const archivedContainer = document.getElementById('archived-list-container');
+            
+            // Historial Actual
+            if(currentUser.history.length === 0) {
+                document.getElementById('history-empty-message').classList.remove('hidden');
+                container.innerHTML = '';
+            } else {
+                document.getElementById('history-empty-message').classList.add('hidden');
+                container.innerHTML = currentUser.history.slice().reverse().map(h => `
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-gray-700 pb-3 md:pb-4 animate-fade-in-up">
+                        <div><p class="text-base md:text-xl font-bold text-white">Barbero: ${h.barberName}</p></div>
+                        <p class="text-sm md:text-lg text-primary font-display mt-1 sm:mt-0">${new Date(h.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                    </div>`
+                ).join('');
+            }
+
+            // Historial Archivado
+            if(currentUser.archivedCards && currentUser.archivedCards.length > 0) {
+                archivedSection.classList.remove('hidden');
+                archivedContainer.innerHTML = currentUser.archivedCards.slice().reverse().map(card => `
+                    <div onclick="openArchivedCardModal(${card.number})" class="cursor-pointer bg-gradient-to-r from-yellow-900/40 to-yellow-600/20 border border-yellow-600/50 p-4 rounded-lg hover:scale-105 transition-transform flex justify-between items-center group">
+                        <div class="flex items-center">
+                            <div class="bg-yellow-500 text-black w-10 h-10 rounded-full flex items-center justify-center font-bold mr-4 shadow-lg group-hover:shadow-yellow-500/50 transition-shadow">${card.number}</div>
+                            <div><h4 class="font-display text-yellow-500 text-lg font-bold">TARJETA ${card.number} TERMINADA</h4><p class="text-sm text-gray-400">Finalizada: ${new Date(card.finishDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })}</p></div>
+                        </div>
+                        <i class="fas fa-chevron-right text-yellow-500"></i>
+                    </div>`
+                ).join('');
+            } else {
+                archivedSection.classList.add('hidden');
+            }
+        }
+
+        function renderRewardsHistory() {
+            const container = document.getElementById('rewards-list-container');
+            if(currentUser.rewardsHistory.length === 0) {
+                document.getElementById('rewards-empty-message').classList.remove('hidden');
+                container.innerHTML = '';
+            } else {
+                document.getElementById('rewards-empty-message').classList.add('hidden');
+                container.innerHTML = currentUser.rewardsHistory.slice().reverse().map(r => {
+                    let colorClass = "text-gray-300", iconClass = "fa-gift";
+                    if(r.type === 'Silver') { colorClass = "text-gray-300"; iconClass = "fa-shield-alt"; }
+                    if(r.type === 'Gold') { colorClass = "text-yellow-400"; iconClass = "fa-medal"; }
+                    if(r.type === 'Platinum') { colorClass = "text-blue-200"; iconClass = "fa-gem"; }
+                    return `
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-gray-700 pb-3 md:pb-4 bg-black/30 p-3 md:p-4 rounded-lg animate-fade-in-up">
+                        <div class="flex items-center gap-3 md:gap-4">
+                            <div class="text-2xl md:text-3xl ${colorClass}"><i class="fas ${iconClass}"></i></div>
+                            <div><p class="text-base md:text-xl font-bold ${colorClass} font-display">${r.title}</p><p class="text-xs md:text-sm text-gray-400">${r.detail}</p></div>
+                        </div>
+                        <p class="text-sm md:text-lg text-gray-500 font-display mt-2 sm:mt-0">${new Date(r.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })}</p>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        window.openArchivedCardModal = (cardNumber) => {
+            const card = currentUser.archivedCards.find(c => c.number === cardNumber);
+            if(!card) return;
+            document.getElementById('archived-modal-title').textContent = `TARJETA ${card.number} TERMINADA`;
+            document.getElementById('archived-modal-date').textContent = `Completada el: ${new Date(card.finishDate).toLocaleDateString('es-ES', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}`;
+            document.getElementById('archived-visits-container').innerHTML = card.visits.map((v, index) => `
+                <div class="flex justify-between items-center bg-gray-800/50 p-3 rounded border border-gray-700">
+                    <div class="flex items-center gap-3">
+                        <div class="text-primary font-bold w-6">${index + 1}.</div>
+                        <div><p class="text-white font-bold">${v.barberName}</p></div>
+                    </div>
+                    <div class="text-gray-400 text-sm">${new Date(v.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}</div>
+                </div>`
+            ).join('');
+            document.getElementById('archived-card-modal').classList.remove('hidden');
+        };
+
+        function updateAdminUI(isAdmin) {
+            const d = document.getElementById('nav-barberos-desktop');
+            const m = document.getElementById('nav-barberos-mobile');
+            if(isAdmin) { d.classList.remove('hidden'); m.classList.remove('hidden'); }
+            else { d.classList.add('hidden'); m.classList.add('hidden'); }
+            
+            document.getElementById('barbers-grid').innerHTML = BARBERS_LIST.map(b => `
+                <div class="border-2 border-gray-700 p-4 md:p-6 rounded-2xl text-center bg-gray-900/50 transition-all duration-300 hover:border-primary">
+                    <img src="${b.photoUrl}" class="w-24 h-24 md:w-32 md:h-32 rounded-full mx-auto mb-4 md:mb-6 border-4 border-gray-600 object-cover">
+                    <h3 class="font-display text-lg md:text-3xl mb-1 md:mb-2 text-white">${b.name}</h3>
+                    <p class="font-display text-sm md:text-lg text-primary">ID: ${b.id}</p>
+                </div>`).join('');
+            
+            const showB = () => document.getElementById('barber-modal').classList.remove('hidden');
+            d.onclick = showB; m.onclick = showB;
+        }
+
+        const logout = () => {
+            currentUser = null;
+            localStorage.removeItem(SESSION_KEY);
+            location.reload();
+        };
+    </script>
+</body>
+</html>
+
