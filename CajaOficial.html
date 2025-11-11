@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Griffin's POS - Reportes PDF</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- jsPDF & AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Configuración Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#22d3ee', // Cyan
+                        secondary: '#2563eb', // Blue
+                        dark: '#0a0a0a',
+                        card: '#171717',
+                        surface: '#262626',
+                        danger: '#ef4444',
+                        success: '#10b981'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #0a0a0a; color: #e5e7eb; transition: border-top-color 0.5s ease; }
+        
+        body.register-open { border-top: 4px solid #22d3ee; }
+        body.register-closed { border-top: 4px solid #ef4444; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #2563eb 0%, #22d3ee 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+        }
+
+        .glass-card {
+            background: rgba(23, 23, 23, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-field {
+            background-color: #0a0a0a;
+            border: 1px solid #404040;
+            color: white;
+            transition: all 0.3s;
+        }
+        .input-field:focus {
+            border-color: #22d3ee;
+            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+            outline: none;
+        }
+
+        select.input-field option {
+            background-color: #171717;
+            color: white;
+            padding: 10px;
+        }
+
+        .disabled-overlay {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(0.8);
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+        @keyframes blink { 50% { opacity: 0.5; } }
+        .timer-dot { animation: blink 1s infinite; }
+        
+        .service-row {
+            animation: slideDown 0.2s ease-out forwards;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body id="main-body" class="min-h-screen flex flex-col register-closed">
+
+    <!-- Navbar -->
+    <nav class="border-b border-white/10 bg-black/50 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <!-- NUEVO LOGO -->
+                    <div class="w-10 h-10 rounded-lg overflow-hidden shadow-lg shadow-primary/20 border border-white/10">
+                        <img src="https://i.postimg.cc/nr2MfJ35/1762826387722.png" alt="Griffin's Logo" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <!-- NOMBRE ACTUALIZADO -->
+                        <h1 class="text-xl font-bold tracking-tight">Griffin<span class="text-primary font-light">'s</span></h1>
+                        <div id="header-status-badge" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mt-1 bg-red-500/10 text-red-500 border border-red-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span> Cerrado
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div id="current-date-display" class="hidden md:block text-xs font-mono text-gray-400 border-r border-white/10 pr-4 text-right"></div>
+
+                    <!-- Botón Gestión Staff -->
+                    <button onclick="toggleStaffModal()" 
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all bg-surface border border-white/10 hover:bg-white/5 hover:text-primary hover:border-primary/50 group">
+                        <i class="fas fa-users-cog group-hover:scale-110 transition-transform"></i>
+                        <span class="hidden sm:inline">Gestionar Equipo</span>
+                    </button>
+
+                    <!-- Botón Servicios -->
+                    <button onclick="toggleServicesModal()" 
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all bg-surface border border-white/10 hover:bg-white/5 hover:text-primary hover:border-primary/50 group">
+                        <i class="fas fa-list-ul group-hover:scale-110 transition-transform"></i>
+                        <span class="hidden sm:inline">Servicios</span>
+                    </button>
+
+                    <!-- Botón Caja -->
+                    <button onclick="handleRegisterToggle()" id="btn-register-toggle" 
+                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border border-white/10 hover:bg-white/5">
+                        <i class="fas fa-power-off"></i>
+                        <span id="btn-register-text">Abrir Caja</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow p-4 sm:p-6 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Operations (8 cols) -->
+        <div id="operations-area" class="lg:col-span-8 space-y-8 transition-all duration-500">
+            
+            <!-- Active Cuts -->
+            <section>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <span class="w-2 h-6 bg-gradient-to-b from-red-500 to-orange-500 rounded-full"></span>
+                        En Servicio (Ocupados)
+                    </h2>
+                    <span id="live-indicator" class="text-xs text-red-400 font-mono animate-pulse hidden"><i class="fas fa-circle text-[8px] mr-1"></i>LIVE</span>
+                </div>
+                <div id="active-barber-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-h-[100px]"></div>
+            </section>
+
+            <!-- Available Staff -->
+            <section>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <span class="w-2 h-6 bg-gradient-to-b from-primary to-blue-600 rounded-full"></span>
+                        Staff Disponible
+                    </h2>
+                </div>
+                <div id="available-barber-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+            </section>
+        </div>
+
+        <!-- Right Column: Control Panel & History (4 cols) -->
+        <div class="lg:col-span-4 space-y-6 relative">
+            
+            <!-- Aviso Caja Cerrada -->
+            <div id="closed-notice" class="glass-card p-4 rounded-2xl text-center border-red-500/30 hidden">
+                <div class="text-red-500 text-lg mb-2"><i class="fas fa-lock"></i> Caja Cerrada</div>
+                <p class="text-xs text-gray-400">Abre la caja para operar.</p>
+            </div>
+
+            <!-- CONTROL PANEL -->
+            <section id="control-panel" class="glass-card rounded-2xl p-5 shadow-2xl border-t border-white/10 relative overflow-hidden transition-all duration-300">
+                <div id="form-stripe" class="absolute top-0 left-0 w-full h-1.5 bg-gray-600 transition-colors duration-300"></div>
+                
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white" id="form-title">Panel de Control</h2>
+                        <p class="text-xs text-gray-400 mt-1" id="form-subtitle">Selecciona un barbero...</p>
+                    </div>
+                    <div id="form-avatar" class="w-10 h-10 rounded-full bg-surface border border-white/10 flex items-center justify-center text-gray-600 overflow-hidden">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+
+                <form id="pos-form" onsubmit="event.preventDefault(); handleFormSubmit();" class="space-y-3">
+                    <div>
+                        <label class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Cliente</label>
+                        <input type="text" id="client-name" required placeholder="Nombre del cliente" disabled
+                            class="input-field w-full p-3 rounded-lg text-sm focus:ring-1 focus:ring-primary disabled:opacity-50">
+                    </div>
+
+                    <div id="services-section" class="transition-opacity duration-300">
+                        <label class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 flex justify-between items-center">
+                            <span>Servicios</span>
+                            <span class="text-xs text-primary normal-case" id="services-count-badge"></span>
+                        </label>
+                        
+                        <div id="service-rows-container" class="space-y-2 mb-2"></div>
+
+                        <div id="no-services-warning" class="hidden text-red-400 text-xs py-2 bg-red-500/10 rounded border border-red-500/20 text-center mb-2">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> No has registrado servicios.<br>
+                            <span onclick="toggleServicesModal()" class="underline cursor-pointer hover:text-white">Configurar Precios aquí</span>
+                        </div>
+
+                        <button type="button" id="btn-add-service" onclick="addServiceRow()" disabled
+                            class="text-xs text-primary hover:text-white flex items-center gap-1 py-1 px-2 rounded hover:bg-white/5 transition-colors disabled:opacity-0">
+                            <i class="fas fa-plus-circle"></i> Agregar otro servicio
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
+                        <div>
+                            <label class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Total</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-3 text-gray-500">$</span>
+                                <input type="number" id="service-price" value="0" readonly
+                                    class="input-field w-full pl-7 p-3 rounded-lg text-sm font-mono font-bold text-white bg-dark/50 border-transparent">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Inicio</label>
+                            <input type="text" id="start-time-display" disabled value="--:--"
+                                class="w-full bg-dark/50 border border-white/5 text-gray-500 p-3 rounded-lg text-sm text-center">
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex flex-col gap-2">
+                        <button type="submit" id="btn-main-action" disabled 
+                            class="w-full py-3 px-4 rounded-xl text-sm font-bold text-white bg-gray-800 cursor-not-allowed flex justify-center items-center gap-2 transition-all">
+                            <span>Esperando selección...</span>
+                        </button>
+                        <button type="button" onclick="cancelSelection()" id="btn-cancel" class="text-xs text-gray-500 hover:text-white hidden py-1">Cancelar</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- HISTORY & FEED SECTION -->
+            <div class="space-y-4">
+                <div class="glass-card rounded-xl p-3 flex items-center gap-2">
+                    <span class="text-xs text-gray-400 uppercase font-bold tracking-wider whitespace-nowrap"><i class="fas fa-history mr-1"></i>Historial</span>
+                    
+                    <div class="flex flex-1 gap-2">
+                        <input type="date" id="history-date-picker" onchange="handleDateChange(this.value)" 
+                            class="flex-1 bg-dark text-white text-xs p-1.5 rounded border border-white/10 focus:border-primary outline-none">
+                        
+                        <button onclick="showAllHistory()" id="btn-show-all"
+                            class="px-3 py-1 bg-surface border border-white/10 rounded text-xs text-gray-300 hover:bg-white/10 hover:text-white hover:border-primary/50 transition-all font-bold">
+                            Todos
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-surface/50 rounded-xl p-3 border border-white/5">
+                        <p class="text-[10px] text-gray-400 uppercase">Venta Total</p>
+                        <p class="text-xl font-bold text-white" id="stat-total-sales">$0</p>
+                    </div>
+                    <div class="bg-surface/50 rounded-xl p-3 border border-white/5">
+                        <p class="text-[10px] text-gray-400 uppercase">Cortes</p>
+                        <p class="text-xl font-bold text-white" id="stat-total-cuts">0</p>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl flex flex-col h-[400px]">
+                    <div class="p-3 border-b border-white/10 bg-white/5 flex justify-between items-center rounded-t-xl">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-white">Registro de Cortes</h3>
+                            <button id="btn-download-pdf" onclick="downloadPDF()" class="hidden text-red-500 hover:text-red-400 transition-colors p-1" title="Descargar Reporte PDF">
+                                <i class="fas fa-file-pdf text-lg"></i>
+                            </button>
+                        </div>
+                        <span id="feed-status-badge" class="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded">HOY</span>
+                    </div>
+                    <div id="activity-feed" class="flex-1 overflow-y-auto p-3 space-y-2">
+                        <div class="text-center text-gray-500 text-xs py-10">Sin registros.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-[#121212] border border-primary/30 w-full max-w-md rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.1)] transform scale-95 transition-transform duration-300 p-6">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3 text-green-500 text-2xl"><i class="fas fa-check"></i></div>
+                <h3 class="text-2xl font-bold text-white">Finalizar Servicio</h3>
+                <p class="text-gray-400 text-sm mt-1" id="modal-client-summary">Resumen del corte</p>
+                <p class="text-primary text-xs mt-1" id="modal-services-list">Servicios: --</p>
+            </div>
+            <div class="space-y-5">
+                <div class="bg-surface p-4 rounded-xl flex justify-between items-center border border-white/5">
+                    <span class="text-gray-400 text-sm">Total a Pagar</span>
+                    <span class="text-3xl font-bold text-white font-mono" id="modal-total-amount">$0</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Monto Recibido</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-3.5 text-gray-500 text-lg">$</span>
+                        <input type="number" id="modal-amount-paid" class="input-field w-full p-3 pl-8 rounded-xl text-xl font-mono text-white focus:border-green-500" placeholder="0" oninput="calculateChange()">
+                    </div>
+                </div>
+                <div class="flex justify-between items-center px-2 py-2 bg-black rounded-lg">
+                    <span class="text-gray-400 text-sm">Cambio:</span>
+                    <span class="text-xl font-bold text-gray-500" id="modal-change">$0.00</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-8">
+                <button onclick="closePaymentModal()" class="p-3 rounded-xl bg-surface text-gray-300 hover:bg-white/10 transition-colors font-medium">Volver</button>
+                <button onclick="confirmTransaction()" class="btn-gradient text-white p-3 rounded-xl font-bold shadow-lg">Cobrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAILS MODAL -->
+    <div id="details-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-[#121212] border border-white/10 w-full max-w-md rounded-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] transform scale-95 transition-transform duration-300 relative overflow-hidden">
+            <div id="details-stripe" class="absolute top-0 left-0 w-full h-1.5 bg-gray-600"></div>
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-white" id="details-title">Detalle de Servicio</h3>
+                        <p class="text-gray-400 text-xs mt-1" id="details-subtitle">Información completa</p>
+                    </div>
+                    <button onclick="closeDetailsModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-4 mb-6 bg-surface/50 p-3 rounded-xl border border-white/5">
+                    <div class="relative">
+                        <img id="details-barber-img" src="" class="w-12 h-12 rounded-full object-cover border border-white/10">
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Barbero</p>
+                        <p class="text-sm font-bold text-white" id="details-barber-name">--</p>
+                        <p class="text-xs text-primary mt-0.5" id="details-client-name">Cliente: --</p>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">Desglose de Servicios</p>
+                    <div id="details-services-list" class="space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/5">
+                        <p class="text-[10px] text-gray-500 uppercase">Hora Inicio</p>
+                        <p class="text-sm text-white font-mono" id="details-start-time">--:--</p>
+                    </div>
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/5 relative overflow-hidden">
+                        <div id="details-timer-container">
+                            <p class="text-[10px] text-primary uppercase animate-pulse">Tiempo Transcurrido</p>
+                            <p class="text-xl text-white font-mono font-bold" id="details-live-timer">00:00</p>
+                        </div>
+                        <div id="details-finish-time-container" class="hidden">
+                            <p class="text-[10px] text-gray-500 uppercase">Hora Fin</p>
+                            <p class="text-sm text-white font-mono" id="details-finish-time">--:--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="details-payment-info" class="hidden bg-surface p-3 rounded-xl border border-white/5 mb-6">
+                    <div class="flex justify-between items-center mb-2 border-b border-white/5 pb-2">
+                        <span class="text-xs text-gray-400">Total Servicio</span>
+                        <span class="font-mono font-bold text-white" id="details-total-display">$0.00</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <span class="block text-gray-500">Pagó con:</span>
+                            <span class="font-mono text-white" id="details-paid-amount">$0.00</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-gray-500">Cambio:</span>
+                            <span class="font-mono text-green-400 font-bold" id="details-change-amount">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="details-total-simple" class="flex justify-between items-center pt-4 border-t border-white/10 mb-6">
+                    <span class="text-sm text-gray-400">Total Acumulado</span>
+                    <span class="text-3xl font-mono font-bold text-white" id="details-total-simple-amount">$0.00</span>
+                </div>
+
+                <div id="details-actions-active" class="hidden">
+                    <button onclick="transferToCheckout()" class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-cash-register"></i> Pasar a Caja / Cobrar
+                    </button>
+                </div>
+                <div id="details-actions-history" class="hidden">
+                    <button onclick="closeDetailsModal()" class="w-full py-3 bg-white/5 hover:bg-white/10 text-gray-300 font-bold rounded-xl transition-all">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAFF MANAGEMENT MODAL -->
+    <div id="staff-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-[#121212] border border-white/10 w-full max-w-lg rounded-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] transform scale-95 transition-transform duration-300 relative overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"></div>
+            
+            <!-- Header -->
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <div>
+                    <h3 class="text-2xl font-bold text-white tracking-tight">Gestionar Equipo</h3>
+                    <p class="text-gray-400 text-xs mt-1">Da de alta o baja a tus barberos</p>
+                </div>
+                <button onclick="toggleStaffModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- Formulario Agregar -->
+                <div class="bg-surface/30 p-4 rounded-xl border border-white/10 mb-6">
+                    <p class="text-[10px] text-blue-400 uppercase font-bold mb-3"><i class="fas fa-user-plus mr-1"></i> Nuevo Barbero</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-barber-name" placeholder="Nombre del barbero" class="input-field flex-1 p-2 rounded text-xs">
+                        <button onclick="addNewBarber()" class="px-4 bg-blue-600 text-white font-bold rounded-lg text-xs hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20">
+                            Agregar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista -->
+                <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">Personal Actual</p>
+                <div id="staff-list-manage" class="space-y-2">
+                    <!-- JS Items -->
+                    <div class="text-center text-gray-500 text-xs py-4">No hay personal registrado.</div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-white/5 text-center bg-black/20">
+                <p class="text-[10px] text-gray-500">Los cambios son inmediatos.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SERVICES CONFIG MODAL -->
+    <div id="services-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-[#121212] border border-white/10 w-full max-w-lg rounded-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] transform scale-95 transition-transform duration-300 relative overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <div>
+                    <h3 class="text-2xl font-bold text-white tracking-tight">Configurar Servicios</h3>
+                    <p class="text-gray-400 text-xs mt-1">Administra tu lista de precios</p>
+                </div>
+                <button onclick="toggleServicesModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="bg-surface/30 p-4 rounded-xl border border-white/10 mb-6">
+                    <p class="text-[10px] text-primary uppercase font-bold mb-3"><i class="fas fa-plus-circle mr-1"></i> Agregar Nuevo</p>
+                    <div class="grid grid-cols-12 gap-2">
+                        <div class="col-span-5">
+                            <input type="text" id="new-service-name" placeholder="Nombre (ej. Corte)" class="input-field w-full p-2 rounded text-xs">
+                        </div>
+                        <div class="col-span-3">
+                            <input type="number" id="new-service-price" placeholder="Precio" class="input-field w-full p-2 rounded text-xs">
+                        </div>
+                        <div class="col-span-2">
+                            <select id="new-service-icon" class="input-field w-full p-2 rounded text-xs">
+                                <option value="fa-cut">✂️</option>
+                                <option value="fa-user-tag">👤</option>
+                                <option value="fa-mask">🧔</option>
+                                <option value="fa-spray-can">🧴</option>
+                                <option value="fa-star">⭐</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <button onclick="addNewService()" class="w-full h-full bg-primary text-black font-bold rounded text-xs hover:bg-primary/80 transition-colors">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">Servicios Actuales</p>
+                <div id="services-list-manage" class="space-y-2">
+                    <div class="text-center text-gray-500 text-xs py-4">No hay servicios registrados.</div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-white/5 text-center bg-black/20">
+                <p class="text-[10px] text-gray-500">Los cambios se guardan automáticamente.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // START EMPTY (Clean Slate)
+        const defaultBarbers = [];
+        
+        let appState = {
+            barbers: JSON.parse(localStorage.getItem('griffin_v6_barbers')) || [],
+            services: JSON.parse(localStorage.getItem('griffin_v5_services')) || [], 
+            isRegisterOpen: localStorage.getItem('griffin_v5_isOpen') === 'true',
+            todayCuts: JSON.parse(localStorage.getItem('griffin_v5_todayCuts')) || [],
+            history: JSON.parse(localStorage.getItem('griffin_v5_history')) || {},
+            selectedBarberId: null,
+            interactionMode: null,
+            tempTransaction: null,
+            viewingDate: null, // 'ALL' or 'YYYY-MM-DD'
+            activeModalTimer: null,
+            currentModalBarberId: null
+        };
+
+        const formatMoney = (amount) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
+        
+        function formatDuration(startTime) {
+            const now = Date.now();
+            const diff = now - startTime;
+            const seconds = Math.floor((diff / 1000) % 60);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const hours = Math.floor((diff / (1000 * 60 * 60)));
+            return hours > 0 
+                ? `${hours}:${minutes < 10 ? '0'+minutes : minutes}:${seconds < 10 ? '0'+seconds : seconds}`
+                : `${minutes}:${seconds < 10 ? '0'+seconds : seconds}`;
+        }
+
+        // --- Init ---
+        function init() {
+            setInterval(updateTimers, 1000);
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('history-date-picker').value = today;
+            appState.viewingDate = today;
+            
+            updateDateDisplay();
+            renderServicesManager();
+            renderStaffManager(); // Init staff list logic
+            renderUI();
+        }
+
+        function updateDateDisplay() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const todayStr = new Date().toLocaleDateString('es-MX', options);
+            const finalStr = todayStr.charAt(0).toUpperCase() + todayStr.slice(1);
+            document.getElementById('current-date-display').textContent = finalStr;
+        }
+
+        // --- STAFF MANAGEMENT ---
+        function toggleStaffModal() {
+            const modal = document.getElementById('staff-modal');
+            const innerDiv = modal.querySelector('div');
+            renderStaffManager(); 
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    innerDiv.classList.remove('scale-95');
+                }, 10);
+            } else {
+                modal.classList.add('opacity-0');
+                innerDiv.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function renderStaffManager() {
+            const container = document.getElementById('staff-list-manage');
+            container.innerHTML = '';
+            
+            if (appState.barbers.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-500 text-xs py-8 border border-dashed border-white/10 rounded-xl bg-white/5">
+                    <i class="fas fa-users-slash text-xl mb-2 opacity-50"></i><br>
+                    Sin personal.<br>Agrega barberos arriba.
+                </div>`;
+                return;
+            }
+
+            appState.barbers.forEach((barber) => {
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center p-3 rounded-lg bg-surface border border-white/5 hover:border-blue-500/30 transition-all group";
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${barber.photo}" class="w-8 h-8 rounded-full object-cover border border-white/10">
+                        <span class="text-sm font-medium text-gray-300 group-hover:text-white">${barber.name}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="deleteBarber(${barber.id})" class="text-red-500/50 hover:text-red-500 transition-colors p-1 bg-red-500/10 rounded">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addNewBarber() {
+            const nameInput = document.getElementById('new-barber-name');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert("Ingresa el nombre del barbero.");
+                return;
+            }
+
+            // Generate random color for avatar placeholder
+            const colors = ['22d3ee', '2563eb', 'ef4444', '10b981', 'f59e0b', '8b5cf6', 'ec4899'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            const initials = name.substring(0,2).toUpperCase();
+
+            const newBarber = {
+                id: Date.now(), // Simple unique ID
+                name: name,
+                photo: `https://placehold.co/150x150/${randomColor}/ffffff?text=${initials}`,
+                status: 'available',
+                currentSession: null
+            };
+
+            appState.barbers.push(newBarber);
+            saveData(); // Note: saving to v6 keys to keep separate from previous versions if needed, or overwrite. Using v6.
+            
+            nameInput.value = '';
+            renderStaffManager();
+            renderBarbers(); // Update main UI
+        }
+
+        function deleteBarber(id) {
+            const barber = appState.barbers.find(b => b.id === id);
+            if (barber && barber.status === 'busy') {
+                alert("No puedes eliminar a un barbero mientras tiene un corte activo. Finaliza el servicio primero.");
+                return;
+            }
+
+            if(confirm(`¿Eliminar a ${barber.name} del equipo?`)) {
+                appState.barbers = appState.barbers.filter(b => b.id !== id);
+                saveData();
+                renderStaffManager();
+                renderBarbers();
+                
+                // If this barber was selected in the UI, deselect
+                if(appState.selectedBarberId === id) cancelSelection();
+            }
+        }
+
+
+        // --- SERVICES MANAGEMENT ---
+        function renderServicesManager() {
+            const container = document.getElementById('services-list-manage');
+            container.innerHTML = '';
+            
+            if (appState.services.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-500 text-xs py-8 border border-dashed border-white/10 rounded-xl bg-white/5">
+                    <i class="fas fa-clipboard-list text-xl mb-2 opacity-50"></i><br>
+                    Lista vacía.<br>Agrega tus servicios arriba.
+                </div>`;
+                return;
+            }
+
+            appState.services.forEach((service, index) => {
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center p-3 rounded-lg bg-surface border border-white/5 hover:border-primary/30 transition-all group";
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-black/50 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                            <i class="fas ${service.icon}"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-300 group-hover:text-white">${service.name}</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-mono font-bold text-white text-sm">${formatMoney(service.price)}</span>
+                        <button onclick="deleteService(${index})" class="text-red-500/50 hover:text-red-500 transition-colors p-1">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addNewService() {
+            const nameInput = document.getElementById('new-service-name');
+            const priceInput = document.getElementById('new-service-price');
+            const iconInput = document.getElementById('new-service-icon');
+            const name = nameInput.value.trim();
+            const price = parseFloat(priceInput.value);
+            const icon = iconInput.value;
+
+            if (!name || isNaN(price) || price <= 0) {
+                alert("Por favor ingresa un nombre válido y un precio mayor a 0.");
+                return;
+            }
+
+            appState.services.push({ name, price, icon });
+            saveData();
+            nameInput.value = '';
+            priceInput.value = '';
+            renderServicesManager();
+        }
+
+        function deleteService(index) {
+            if(confirm("¿Eliminar este servicio de la lista?")) {
+                appState.services.splice(index, 1);
+                saveData();
+                renderServicesManager();
+            }
+        }
+
+        function toggleServicesModal() {
+            const modal = document.getElementById('services-modal');
+            const innerDiv = modal.querySelector('div');
+            renderServicesManager(); 
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    innerDiv.classList.remove('scale-95');
+                }, 10);
+            } else {
+                modal.classList.add('opacity-0');
+                innerDiv.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        // --- Persistence ---
+        function saveData() {
+            localStorage.setItem('griffin_v6_barbers', JSON.stringify(appState.barbers));
+            localStorage.setItem('griffin_v5_services', JSON.stringify(appState.services));
+            localStorage.setItem('griffin_v5_isOpen', appState.isRegisterOpen);
+            localStorage.setItem('griffin_v5_todayCuts', JSON.stringify(appState.todayCuts));
+            localStorage.setItem('griffin_v5_history', JSON.stringify(appState.history));
+        }
+
+        function handleRegisterToggle() {
+            const today = new Date().toISOString().split('T')[0];
+            if (appState.isRegisterOpen) {
+                if (confirm("¿CERRAR CAJA? Se guardará el historial de hoy.")) {
+                    appState.history[today] = appState.todayCuts;
+                    appState.isRegisterOpen = false;
+                    saveData();
+                    renderUI();
+                }
+            } else {
+                appState.isRegisterOpen = true;
+                saveData();
+                renderUI();
+            }
+        }
+
+        function handleDateChange(date) {
+            appState.viewingDate = date;
+            document.getElementById('btn-show-all').classList.remove('bg-primary/20', 'text-primary', 'border-primary/50');
+            document.getElementById('btn-show-all').classList.add('bg-surface', 'text-gray-300', 'border-white/10');
+            renderFeedAndStats();
+        }
+
+        function showAllHistory() {
+            appState.viewingDate = 'ALL';
+            document.getElementById('history-date-picker').value = '';
+            
+            // Highlight Button
+            const btn = document.getElementById('btn-show-all');
+            btn.classList.remove('bg-surface', 'text-gray-300', 'border-white/10');
+            btn.classList.add('bg-primary/20', 'text-primary', 'border-primary/50');
+            
+            renderFeedAndStats();
+        }
+
+        // --- Helper for ALL View ---
+        function getCutsForCurrentView() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (appState.viewingDate === 'ALL') {
+                let allCuts = [];
+                appState.todayCuts.forEach(cut => {
+                    allCuts.push({ ...cut, dateLabel: today });
+                });
+                Object.keys(appState.history).forEach(dateKey => {
+                    const cuts = appState.history[dateKey];
+                    if (Array.isArray(cuts)) {
+                        cuts.forEach(cut => {
+                            allCuts.push({ ...cut, dateLabel: dateKey });
+                        });
+                    }
+                });
+                allCuts.sort((a, b) => {
+                    if (a.dateLabel !== b.dateLabel) return b.dateLabel.localeCompare(a.dateLabel);
+                    return b.finishTime.localeCompare(a.finishTime);
+                });
+                return allCuts;
+            } else if (appState.viewingDate === today) {
+                return appState.todayCuts.map(c => ({...c, dateLabel: today}));
+            } else {
+                const historyCuts = appState.history[appState.viewingDate] || [];
+                return historyCuts.map(c => ({...c, dateLabel: appState.viewingDate}));
+            }
+        }
+
+        // --- PDF Generation ---
+        function downloadPDF() {
+            const cutsToRender = getCutsForCurrentView();
+            if (cutsToRender.length === 0) return; // Safety check
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Title
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.text("Mi Barbería - Reporte de Ventas", 14, 20);
+
+            // Date/Subtitle
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            let dateText = "";
+            if (appState.viewingDate === 'ALL') {
+                dateText = "Historial Completo";
+            } else if (appState.viewingDate === new Date().toISOString().split('T')[0]) {
+                dateText = `Corte del día: ${appState.viewingDate} (HOY)`;
+            } else {
+                dateText = `Fecha: ${appState.viewingDate}`;
+            }
+            doc.text(dateText, 14, 28);
+
+            // Calculate Total
+            const totalSales = cutsToRender.reduce((sum, c) => sum + c.price, 0);
+            const totalCuts = cutsToRender.length;
+
+            // Table Data
+            const tableBody = cutsToRender.map(cut => [
+                appState.viewingDate === 'ALL' ? `${cut.dateLabel} ${cut.finishTime}` : cut.finishTime,
+                cut.clientName,
+                cut.barberName,
+                cut.services ? cut.services.map(s => s.name).join(', ') : "General",
+                formatMoney(cut.price)
+            ]);
+
+            // AutoTable
+            doc.autoTable({
+                startY: 35,
+                head: [['Hora/Fecha', 'Cliente', 'Barbero', 'Servicios', 'Precio']],
+                body: tableBody,
+                theme: 'grid',
+                headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
+                foot: [['', '', '', 'TOTAL:', formatMoney(totalSales)]],
+                footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' }
+            });
+
+            // Save
+            doc.save(`Reporte_Ventas_${appState.viewingDate}.pdf`);
+        }
+
+        // --- UI Rendering ---
+        function renderUI() {
+            renderRegisterStatus();
+            renderBarbers();
+            renderFeedAndStats();
+        }
+
+        function renderRegisterStatus() {
+            const body = document.getElementById('main-body');
+            const badge = document.getElementById('header-status-badge');
+            const btnText = document.getElementById('btn-register-text');
+            const btnToggle = document.getElementById('btn-register-toggle');
+            const opsArea = document.getElementById('operations-area');
+            const closedNotice = document.getElementById('closed-notice');
+            const liveIndicator = document.getElementById('live-indicator');
+            
+            if (appState.isRegisterOpen) {
+                body.className = "min-h-screen flex flex-col register-open";
+                badge.className = "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mt-1 bg-green-500/10 text-green-500 border border-green-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span> Abierto`;
+                btnText.textContent = "Cerrar Caja";
+                btnToggle.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20";
+                opsArea.classList.remove('disabled-overlay');
+                closedNotice.classList.add('hidden');
+                liveIndicator.classList.remove('hidden');
+            } else {
+                body.className = "min-h-screen flex flex-col register-closed";
+                badge.className = "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mt-1 bg-red-500/10 text-red-500 border border-red-500/20";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span> Cerrado`;
+                btnText.textContent = "Abrir Caja";
+                btnToggle.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20";
+                opsArea.classList.add('disabled-overlay');
+                closedNotice.classList.remove('hidden');
+                liveIndicator.classList.add('hidden');
+                if(appState.selectedBarberId) cancelSelection();
+            }
+        }
+
+        function renderBarbers() {
+            const activeContainer = document.getElementById('active-barber-grid');
+            const availableContainer = document.getElementById('available-barber-grid');
+            activeContainer.innerHTML = '';
+            availableContainer.innerHTML = '';
+            let hasActive = false;
+
+            // Handle Empty State
+            if (appState.barbers.length === 0) {
+                const emptyState = `
+                    <div class="col-span-full border border-dashed border-white/10 rounded-xl p-8 text-center flex flex-col items-center justify-center bg-surface/30">
+                        <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 text-gray-500">
+                            <i class="fas fa-users-slash text-xl"></i>
+                        </div>
+                        <p class="text-sm text-gray-400 font-bold">No hay personal disponible</p>
+                        <p class="text-xs text-gray-600 mt-1">Agrega barberos desde el botón "Gestionar Equipo" en el menú.</p>
+                    </div>
+                `;
+                availableContainer.innerHTML = emptyState;
+                activeContainer.innerHTML = `<div class="col-span-full border border-dashed border-gray-700 rounded-xl p-4 text-center text-gray-600 text-xs flex items-center justify-center gap-2"><i class="fas fa-couch"></i> Sin cortes activos</div>`;
+                return;
+            }
+
+            appState.barbers.forEach(barber => {
+                const isSelected = appState.selectedBarberId === barber.id;
+                if (barber.status === 'busy' && barber.currentSession) {
+                    hasActive = true;
+                    let serviceSummary = "Servicio General";
+                    if (barber.currentSession.services && barber.currentSession.services.length > 0) {
+                        serviceSummary = barber.currentSession.services.map(s => s.name).join(', ');
+                    }
+                    const card = document.createElement('div');
+                    card.className = `bg-card border ${isSelected ? 'border-primary ring-1 ring-primary' : 'border-red-500/30'} rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors relative overflow-hidden`;
+                    card.onclick = () => openActiveDetails(barber.id);
+                    if(!appState.isRegisterOpen) card.style.pointerEvents = "auto"; 
+                    if(!appState.isRegisterOpen) card.style.filter = "none";
+                    card.innerHTML = `
+                        <div class="absolute right-0 top-0 opacity-10 text-4xl text-red-500 -mr-2 -mt-2 pointer-events-none"><i class="fas fa-cut"></i></div>
+                        <div class="relative shrink-0">
+                            <img src="${barber.photo}" class="w-12 h-12 rounded-full object-cover border-2 border-red-500">
+                            <div class="absolute -bottom-1 -right-1 bg-red-500 w-4 h-4 rounded-full flex items-center justify-center border border-black text-[8px] animate-pulse"><i class="fas fa-clock text-white"></i></div>
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <h3 class="font-bold text-white text-sm truncate">${barber.name}</h3>
+                            <div class="flex flex-col">
+                                <p class="text-[11px] text-white font-bold truncate"><i class="fas fa-user text-[8px] mr-1 text-gray-500"></i>${barber.currentSession.clientName}</p>
+                                <p class="text-[10px] text-gray-400 truncate mt-0.5"><i class="fas fa-tags text-[8px] mr-1"></i>${serviceSummary}</p>
+                            </div>
+                            <div class="mt-1 inline-flex items-center gap-1 bg-black/50 px-2 py-0.5 rounded text-primary font-mono text-xs border border-primary/20">
+                                <i class="fas fa-stopwatch text-[10px] timer-dot"></i>
+                                <span id="timer-${barber.id}">00:00</span>
+                            </div>
+                        </div>
+                    `;
+                    activeContainer.appendChild(card);
+                } else {
+                    const card = document.createElement('div');
+                    const statusColor = barber.status === 'waiting' ? 'yellow' : 'green';
+                    card.className = `relative group cursor-pointer rounded-xl p-2 transition-all border ${isSelected ? 'bg-white/10 border-primary' : 'bg-surface border-white/5 hover:border-white/20'} flex flex-col items-center`;
+                    card.onclick = () => { if(appState.isRegisterOpen) selectBarber(barber.id); };
+                    card.innerHTML = `
+                        <div class="relative w-10 h-10 mb-1">
+                            <img src="${barber.photo}" class="w-full h-full rounded-full object-cover opacity-80 group-hover:opacity-100">
+                            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border border-black bg-${statusColor}-500"></div>
+                        </div>
+                        <h3 class="text-[10px] font-bold text-gray-300 group-hover:text-white text-center truncate w-full">${barber.name}</h3>
+                        <p class="text-[8px] text-${statusColor}-500 uppercase font-bold tracking-wider">${barber.status === 'waiting' ? 'En Espera' : 'Disp'}</p>
+                         <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100" onclick="event.stopPropagation()">
+                             <button onclick="${appState.isRegisterOpen ? `toggleWaitStatus(${barber.id})` : ''}" class="text-gray-500 hover:text-yellow-400 text-[10px] p-1"><i class="fas fa-coffee"></i></button>
+                        </div>
+                    `;
+                    availableContainer.appendChild(card);
+                }
+            });
+            if (!hasActive) activeContainer.innerHTML = `<div class="col-span-full border border-dashed border-gray-700 rounded-xl p-4 text-center text-gray-600 text-xs flex items-center justify-center gap-2"><i class="fas fa-couch"></i> Sin cortes activos</div>`;
+        }
+
+        function renderFeedAndStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const cutsToRender = getCutsForCurrentView();
+
+            // Update Header Badge
+            if (appState.viewingDate === 'ALL') {
+                document.getElementById('feed-status-badge').textContent = "HISTORIAL COMPLETO";
+                document.getElementById('feed-status-badge').className = "text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded";
+            } else if (appState.viewingDate === today) {
+                document.getElementById('feed-status-badge').textContent = "HOY - EN VIVO";
+                document.getElementById('feed-status-badge').className = "text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded animate-pulse";
+            } else {
+                document.getElementById('feed-status-badge').textContent = `HISTORIAL: ${appState.viewingDate}`;
+                document.getElementById('feed-status-badge').className = "text-[10px] bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded";
+            }
+
+            const total = cutsToRender.reduce((sum, c) => sum + c.price, 0);
+            document.getElementById('stat-total-sales').textContent = formatMoney(total);
+            document.getElementById('stat-total-cuts').textContent = cutsToRender.length;
+
+            // PDF Button Visibility
+            const pdfBtn = document.getElementById('btn-download-pdf');
+            if (cutsToRender.length > 0) {
+                pdfBtn.classList.remove('hidden');
+            } else {
+                pdfBtn.classList.add('hidden');
+            }
+
+            const container = document.getElementById('activity-feed');
+            container.innerHTML = '';
+            
+            let displayList = [...cutsToRender];
+            if (appState.viewingDate !== 'ALL') {
+                displayList.reverse();
+            }
+
+            displayList.forEach((cut, index) => {
+                const item = document.createElement('div');
+                let serviceText = cut.services ? cut.services.map(s=>s.name).join(", ") : "Servicio General";
+                
+                let dateHtml = '';
+                if(appState.viewingDate === 'ALL') {
+                    dateHtml = `<span class="ml-1 px-1.5 py-0.5 rounded bg-white/5 text-[9px] text-gray-500 font-mono">${cut.dateLabel}</span>`;
+                }
+
+                item.className = "bg-surface p-2.5 rounded-lg flex justify-between items-center border-l-2 border-white/5 hover:border-primary transition-all animate-fade-in group cursor-pointer hover:bg-white/5";
+                item.onclick = () => openHistoryDetailsCustom(cut); 
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 group-hover:text-white transition-colors"><i class="fas fa-check text-xs"></i></div>
+                        <div class="overflow-hidden">
+                            <div class="flex items-center">
+                                <p class="text-xs font-bold text-white truncate">${cut.clientName}</p>
+                                ${dateHtml}
+                            </div>
+                            <p class="text-[10px] text-gray-400 truncate max-w-[150px]">${serviceText}</p>
+                            <p class="text-[9px] text-gray-600">${cut.barberName} • ${cut.finishTime}</p>
+                        </div>
+                    </div>
+                    <div class="text-right whitespace-nowrap">
+                        <p class="font-mono font-bold text-sm text-primary">${formatMoney(cut.price)}</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+            
+            if (cutsToRender.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-500 text-xs py-8 opacity-50 italic">No hay cortes registrados.</div>`;
+            }
+        }
+
+        function updateTimers() {
+            appState.barbers.forEach(barber => {
+                if (barber.status === 'busy' && barber.currentSession) {
+                    const el = document.getElementById(`timer-${barber.id}`);
+                    if (el) el.textContent = formatDuration(barber.currentSession.startTime);
+                }
+            });
+        }
+
+        // --- Modals ---
+        function openActiveDetails(barberId) {
+            const barber = appState.barbers.find(b => b.id === barberId);
+            if (!barber || !barber.currentSession) return;
+            const session = barber.currentSession;
+            
+            document.getElementById('details-title').textContent = "Servicio en Curso";
+            document.getElementById('details-subtitle').textContent = "Monitoreo en tiempo real";
+            document.getElementById('details-stripe').className = "absolute top-0 left-0 w-full h-1.5 bg-green-500 animate-pulse";
+            
+            document.getElementById('details-barber-img').src = barber.photo;
+            document.getElementById('details-barber-name').textContent = barber.name;
+            document.getElementById('details-client-name').textContent = `Cliente: ${session.clientName}`;
+            
+            const list = document.getElementById('details-services-list');
+            list.innerHTML = '';
+            const services = session.services || [{name: 'Servicio General', price: session.price}];
+            services.forEach(s => {
+                list.innerHTML += `
+                    <div class="flex justify-between text-sm text-gray-300 border-b border-white/5 pb-1">
+                        <span>${s.name}</span>
+                        <span class="font-mono">${formatMoney(s.price)}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('details-start-time').textContent = new Date(session.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('details-total-simple-amount').textContent = formatMoney(session.price);
+            
+            document.getElementById('details-payment-info').classList.add('hidden');
+            document.getElementById('details-total-simple').classList.remove('hidden');
+            document.getElementById('details-timer-container').classList.remove('hidden');
+            document.getElementById('details-finish-time-container').classList.add('hidden');
+            document.getElementById('details-actions-active').classList.remove('hidden');
+            document.getElementById('details-actions-history').classList.add('hidden');
+
+            if(appState.activeModalTimer) clearInterval(appState.activeModalTimer);
+            appState.activeModalTimer = setInterval(() => {
+                document.getElementById('details-live-timer').textContent = formatDuration(session.startTime);
+            }, 1000);
+            document.getElementById('details-live-timer').textContent = formatDuration(session.startTime);
+
+            appState.currentModalBarberId = barberId;
+            const modal = document.getElementById('details-modal');
+            modal.classList.remove('hidden');
+            setTimeout(()=>{modal.classList.remove('opacity-0'); modal.querySelector('div').classList.remove('scale-95')},10);
+        }
+
+        // Modified to accept object directly since we have mixed sources
+        function openHistoryDetailsCustom(cut) {
+            document.getElementById('details-title').textContent = "Detalle de Historial";
+            document.getElementById('details-subtitle').textContent = `Finalizado: ${cut.dateLabel || appState.viewingDate}`;
+            document.getElementById('details-stripe').className = "absolute top-0 left-0 w-full h-1.5 bg-gray-600";
+            
+            const barberInfo = appState.barbers.find(b => b.id === cut.barberId) || { photo: 'https://placehold.co/150x150?text=User' };
+            
+            document.getElementById('details-barber-img').src = barberInfo.photo;
+            document.getElementById('details-barber-name').textContent = cut.barberName;
+            document.getElementById('details-client-name').textContent = `Cliente: ${cut.clientName}`;
+
+            const list = document.getElementById('details-services-list');
+            list.innerHTML = '';
+            const services = cut.services || [{name: 'Servicio General', price: cut.price}];
+            services.forEach(s => {
+                list.innerHTML += `
+                    <div class="flex justify-between text-sm text-gray-300 border-b border-white/5 pb-1">
+                        <span>${s.name}</span>
+                        <span class="font-mono">${formatMoney(s.price)}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('details-start-time').textContent = new Date(cut.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('details-finish-time').textContent = cut.finishTime;
+
+            document.getElementById('details-total-display').textContent = formatMoney(cut.price);
+            document.getElementById('details-paid-amount').textContent = formatMoney(cut.paidAmount || 0);
+            document.getElementById('details-change-amount').textContent = formatMoney((cut.paidAmount || 0) - cut.price);
+
+            document.getElementById('details-payment-info').classList.remove('hidden');
+            document.getElementById('details-total-simple').classList.add('hidden');
+            document.getElementById('details-timer-container').classList.add('hidden');
+            document.getElementById('details-finish-time-container').classList.remove('hidden');
+            document.getElementById('details-actions-active').classList.add('hidden');
+            document.getElementById('details-actions-history').classList.remove('hidden');
+
+            if(appState.activeModalTimer) clearInterval(appState.activeModalTimer);
+
+            const modal = document.getElementById('details-modal');
+            modal.classList.remove('hidden');
+            setTimeout(()=>{modal.classList.remove('opacity-0'); modal.querySelector('div').classList.remove('scale-95')},10);
+        }
+
+        function closeDetailsModal() {
+            const modal = document.getElementById('details-modal');
+            modal.classList.add('opacity-0'); 
+            modal.querySelector('div').classList.add('scale-95');
+            if(appState.activeModalTimer) clearInterval(appState.activeModalTimer);
+            appState.currentModalBarberId = null;
+            setTimeout(()=>modal.classList.add('hidden'),300);
+        }
+
+        function transferToCheckout() {
+            if (appState.currentModalBarberId) {
+                const barber = appState.barbers.find(b => b.id === appState.currentModalBarberId);
+                if (barber && barber.currentSession) {
+                    appState.tempTransaction = {
+                        barberId: barber.id,
+                        barberName: barber.name,
+                        clientName: barber.currentSession.clientName,
+                        price: barber.currentSession.price,
+                        services: barber.currentSession.services || [],
+                        startTime: barber.currentSession.startTime
+                    };
+                    
+                    closeDetailsModal();
+                    setTimeout(() => showPaymentModal(), 300);
+                }
+            }
+        }
+
+        // --- Dynamic Service Selection ---
+        function clearServiceRows() {
+            document.getElementById('service-rows-container').innerHTML = '';
+        }
+
+        function addServiceRow(selectedValue = null) {
+            const container = document.getElementById('service-rows-container');
+            const rowId = 'service-row-' + Date.now() + Math.random().toString(36).substr(2, 9);
+            
+            if (appState.services.length === 0) {
+                return;
+            }
+
+            const row = document.createElement('div');
+            row.className = "service-row flex gap-2";
+            row.id = rowId;
+            
+            let optionsHtml = `<option value="" disabled ${!selectedValue ? 'selected' : ''}>Seleccionar Servicio...</option>`;
+            appState.services.forEach((s, index) => {
+                const isSelected = selectedValue === s.name;
+                optionsHtml += `<option value="${index}" ${isSelected ? 'selected' : ''}>${s.name} - ${formatMoney(s.price)}</option>`;
+            });
+
+            row.innerHTML = `
+                <select class="input-field w-full p-3 rounded-lg text-sm focus:ring-1 focus:ring-primary" onchange="recalculateTotal()">
+                    ${optionsHtml}
+                </select>
+                ${container.children.length > 0 ? `
+                    <button type="button" onclick="removeServiceRow('${rowId}')" class="w-10 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 flex items-center justify-center">
+                        <i class="fas fa-trash text-xs"></i>
+                    </button>
+                ` : ''}
+            `;
+            container.appendChild(row);
+            recalculateTotal();
+        }
+
+        function removeServiceRow(id) {
+            const row = document.getElementById(id);
+            if(row) row.remove();
+            recalculateTotal();
+        }
+
+        function recalculateTotal() {
+            const container = document.getElementById('service-rows-container');
+            const selects = container.querySelectorAll('select');
+            let total = 0;
+            let count = 0;
+
+            selects.forEach(select => {
+                if (select.value !== "") {
+                    total += appState.services[parseInt(select.value)].price;
+                    count++;
+                }
+            });
+
+            const priceInput = document.getElementById('service-price');
+            priceInput.value = total;
+            
+            priceInput.classList.add('text-primary');
+            setTimeout(() => priceInput.classList.remove('text-primary'), 300);
+        }
+
+        function getSelectedServices() {
+            const container = document.getElementById('service-rows-container');
+            const selects = container.querySelectorAll('select');
+            let services = [];
+            selects.forEach(select => {
+                if (select.value !== "") {
+                    services.push(appState.services[parseInt(select.value)]);
+                }
+            });
+            return services;
+        }
+
+        function selectBarber(id) {
+            if (!appState.isRegisterOpen && !appState.barbers.find(b=>b.id===id && b.status==='busy')) return;
+            
+            appState.selectedBarberId = id;
+            const barber = appState.barbers.find(b => b.id === id);
+            const btnAction = document.getElementById('btn-main-action');
+            
+            renderBarbers(); 
+            document.getElementById('btn-cancel').classList.remove('hidden');
+            document.getElementById('form-avatar').innerHTML = `<img src="${barber.photo}" class="w-full h-full object-cover">`;
+
+            if (barber.status === 'busy') {
+                appState.interactionMode = 'end_cut';
+                document.getElementById('form-title').textContent = "Finalizar";
+                document.getElementById('form-subtitle').textContent = `${barber.currentSession.clientName}`;
+                document.getElementById('form-stripe').className = "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-orange-500";
+                document.getElementById('services-section').classList.add('hidden');
+                document.getElementById('client-name').value = barber.currentSession.clientName;
+                document.getElementById('client-name').disabled = true;
+                document.getElementById('service-price').value = barber.currentSession.price;
+                document.getElementById('start-time-display').value = new Date(barber.currentSession.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                btnAction.disabled = false;
+                btnAction.className = "w-full py-3 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 flex justify-center items-center gap-2 transition-all";
+                btnAction.innerHTML = `<i class="fas fa-flag-checkered"></i> Cobrar`;
+            } else {
+                appState.interactionMode = 'start_cut';
+                document.getElementById('form-title').textContent = "Nuevo Corte";
+                document.getElementById('form-subtitle').textContent = `Barbero: ${barber.name}`;
+                document.getElementById('form-stripe').className = "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-blue-500";
+                document.getElementById('services-section').classList.remove('hidden');
+                if (appState.services.length === 0) {
+                    document.getElementById('no-services-warning').classList.remove('hidden');
+                    document.getElementById('btn-add-service').classList.add('hidden');
+                    clearServiceRows();
+                } else {
+                    document.getElementById('no-services-warning').classList.add('hidden');
+                    document.getElementById('btn-add-service').classList.remove('hidden');
+                    document.getElementById('btn-add-service').disabled = false;
+                    clearServiceRows();
+                    addServiceRow();
+                }
+                document.getElementById('client-name').value = "";
+                document.getElementById('client-name').disabled = false;
+                document.getElementById('client-name').focus();
+                document.getElementById('service-price').value = 0; 
+                document.getElementById('start-time-display').value = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                btnAction.disabled = false;
+                btnAction.className = "w-full py-3 px-4 rounded-xl text-sm font-bold text-white btn-gradient flex justify-center items-center gap-2 transition-all";
+                btnAction.innerHTML = `<i class="fas fa-play"></i> Iniciar`;
+            }
+        }
+
+        function cancelSelection() {
+            appState.selectedBarberId = null;
+            appState.interactionMode = null;
+            document.getElementById('pos-form').reset();
+            document.getElementById('form-title').textContent = "Panel de Control";
+            document.getElementById('form-subtitle').textContent = "Selecciona un barbero...";
+            document.getElementById('form-stripe').className = "absolute top-0 left-0 w-full h-1.5 bg-gray-600";
+            document.getElementById('form-avatar').innerHTML = `<i class="fas fa-user"></i>`;
+            document.getElementById('btn-cancel').classList.add('hidden');
+            document.getElementById('btn-main-action').disabled = true;
+            document.getElementById('btn-main-action').innerHTML = "Esperando...";
+            document.getElementById('btn-main-action').className = "w-full py-3 px-4 rounded-xl text-sm font-bold text-white bg-gray-800 cursor-not-allowed flex justify-center items-center gap-2 transition-all";
+            document.getElementById('client-name').disabled = true;
+            document.getElementById('btn-add-service').disabled = true;
+            clearServiceRows();
+            renderBarbers();
+        }
+
+        function toggleWaitStatus(id) {
+            const barber = appState.barbers.find(b => b.id === id);
+            if(barber.status === 'available') barber.status = 'waiting';
+            else if(barber.status === 'waiting') barber.status = 'available';
+            saveData(); renderBarbers();
+        }
+
+        function handleFormSubmit() {
+            if(!appState.selectedBarberId) return;
+            const barber = appState.barbers.find(b=>b.id===appState.selectedBarberId);
+            const clientName = document.getElementById('client-name').value;
+            const price = parseFloat(document.getElementById('service-price').value);
+
+            if(appState.interactionMode === 'start_cut') {
+                if(!clientName) return alert("Ingresa nombre del cliente");
+                if(price <= 0) return alert("Selecciona al menos un servicio o configúralos primero");
+                const selectedServices = getSelectedServices();
+                barber.status = 'busy';
+                barber.currentSession = { clientName, price, services: selectedServices, startTime: Date.now() };
+                saveData(); renderUI(); cancelSelection();
+            } else {
+                appState.tempTransaction = {
+                    barberId: barber.id,
+                    barberName: barber.name,
+                    clientName: barber.currentSession.clientName,
+                    price,
+                    services: barber.currentSession.services || [],
+                    startTime: barber.currentSession.startTime
+                };
+                showPaymentModal();
+            }
+        }
+
+        function showPaymentModal() {
+            const modal = document.getElementById('payment-modal');
+            const tx = appState.tempTransaction;
+            const serviceListText = tx.services.length > 0 ? tx.services.map(s => s.name).join(" + ") : "Servicio General";
+            document.getElementById('modal-client-summary').textContent = `${tx.clientName}`;
+            document.getElementById('modal-services-list').textContent = serviceListText;
+            document.getElementById('modal-total-amount').textContent = formatMoney(tx.price);
+            document.getElementById('modal-amount-paid').value = '';
+            document.getElementById('modal-change').textContent = "$0.00";
+            modal.classList.remove('hidden');
+            setTimeout(()=>{modal.classList.remove('opacity-0'); modal.querySelector('div').classList.remove('scale-95')},10);
+            setTimeout(()=>document.getElementById('modal-amount-paid').focus(),100);
+        }
+
+        function calculateChange() {
+            const total = appState.tempTransaction.price;
+            const paid = parseFloat(document.getElementById('modal-amount-paid').value)||0;
+            const change = paid - total;
+            const el = document.getElementById('modal-change');
+            el.textContent = formatMoney(Math.max(0, change));
+            el.className = change >= 0 ? "text-xl font-bold text-green-500" : "text-xl font-bold text-gray-500";
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('payment-modal');
+            modal.classList.add('opacity-0'); modal.querySelector('div').classList.add('scale-95');
+            setTimeout(()=>modal.classList.add('hidden'),300);
+        }
+
+        function confirmTransaction() {
+            const paid = parseFloat(document.getElementById('modal-amount-paid').value)||0;
+            if(paid < appState.tempTransaction.price) return alert("Monto insuficiente");
+            const barber = appState.barbers.find(b=>b.id===appState.tempTransaction.barberId);
+            appState.todayCuts.push({
+                ...appState.tempTransaction,
+                paidAmount: paid,
+                finishTime: new Date().toLocaleTimeString([],{hour:'2-digit', minute:'2-digit'})
+            });
+            barber.status = 'available';
+            barber.currentSession = null;
+            const today = new Date().toISOString().split('T')[0];
+            if(appState.viewingDate !== today && appState.viewingDate !== 'ALL') {
+                appState.viewingDate = today;
+                document.getElementById('history-date-picker').value = today;
+            } else if (appState.viewingDate === 'ALL') {
+                // If viewing ALL, just refresh to show the new item
+            }
+            saveData(); renderUI(); closePaymentModal(); cancelSelection();
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
